@@ -26,11 +26,25 @@ df = load_data()
 st.sidebar.header("Log Session")
 # ... (Keep the same input fields as before) ...
 
-if st.sidebar.button("Save to Google Sheets"):
-    # Logic to append data
-    st.sidebar.info("To enable SAVING to Google Sheets, we use a 'Service Account'.")
-    st.sidebar.markdown("[Click here for the 1-minute setup guide](https://docs.streamlit.io/library/get-started/multipage-apps/connect-to-data)")
+import requests # Add this at the very top of your file!
 
-# --- DASHBOARD ---
-st.title("🏊‍♂️ My Cloud-Powered Training")
-# ... (Keep the same chart logic as before) ...
+# ... inside the sidebar logic ...
+if st.sidebar.button("Save to Google Sheets"):
+    # Replace the URL below with your Apps Script URL
+    SCRIPT_URL = "YOUR_APPS_SCRIPT_URL_HERE"
+    
+    params = {
+        "date": date,
+        "sport": sport,
+        "duration": duration,
+        "distance": distance,
+        "intensity": intensity,
+        "load": duration * intensity
+    }
+    
+    response = requests.get(SCRIPT_URL, params=params)
+    if response.status_code == 200:
+        st.sidebar.success("Saved to Google Sheets!")
+        st.rerun()
+    else:
+        st.sidebar.error("Error saving data.")
