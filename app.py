@@ -1,62 +1,68 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from datetime import datetime, timedelta
 
-# --- APP CONFIG ---
-st.set_page_config(page_title="Tri-Volume Tracker", layout="centered")
-st.title("🏊‍♂️ Tri-Volume Coach")
+st.set_page_config(page_title="Tri-Coach v1.1", layout="wide")
 
 # --- DATA STORAGE ---
-# In a real app, we'd use a database, but for V1 we'll use a CSV file.
 DATA_FILE = "training_log.csv"
 
 try:
     df = pd.read_csv(DATA_FILE)
+    df['Date'] = pd.to_datetime(df['Date'])
 except FileNotFoundError:
-    df = pd.DataFrame(columns=["Date", "Sport", "Duration", "Intensity"])
+    df = pd.DataFrame(columns=["Date", "Sport", "Duration", "Intensity", "Load"])
 
-# --- SIDEBAR: LOG WORKOUT ---
-st.sidebar.header("Log Your Session")
+# --- SIDEBAR ---
+st.sidebar.header("Log Session")
 date = st.sidebar.date_input("Date", datetime.now())
 sport = st.sidebar.selectbox("Sport", ["Swim", "Bike", "Run", "Strength"])
 duration = st.sidebar.number_input("Duration (mins)", min_value=0, step=5)
-intensity = st.sidebar.slider("Intensity (RPE 1-10)", 1, 10, 5)
+intensity = st.sidebar.slider("Intensity (1=Easy, 10=Max)", 1, 10, 5)
 
-if st.sidebar.button("Add Workout"):
-    new_data = pd.DataFrame([[date, sport, duration, intensity]], 
-                            columns=["Date", "Sport", "Duration", "Intensity"])
-    df = pd.concat([df, new_data], ignore_index=True)
+if st.sidebar.button("Save Workout"):
+    # Calculate Load (Duration * Intensity)
+    load = duration * intensity
+    new_row = pd.DataFrame([[pd.to_datetime(date), sport, duration, intensity, load]], 
+                            columns=["Date", "Sport", "Duration", "Intensity", "Load"])
+    df = pd.concat([df, new_row], ignore_index=True)
     df.to_csv(DATA_FILE, index=False)
-    st.sidebar.success("Session Saved!")
+    st.rerun()
 
-# --- ENGINE: CALCULATE WEEKLY TOTALS ---
-df['Date'] = pd.to_datetime(df['Date'])
-# Group by week (starting Monday)
-weekly_totals = df.groupby(pd.Grouper(key='Date', freq='W-MON'))['Duration'].sum().reset_index()
+# --- DASHBOARD ---
+st.title("🏊‍♂️ My Triathlon Training")
 
-# --- THE COACH'S BRAIN ---
-if len(weekly_totals) > 0:
-    current_week_vol = weekly_totals.iloc[-1]['Duration']
+if not df.empty:
+    # Logic: Group by week
+    df = df.sort_values('Date')
+    weekly = df.groupby(pd.Grouper(key='Date', freq='W-MON')).sum(numeric_only=True).reset_index()
     
-    st.subheader("📊 Training Status")
-    col1, col2 = st.columns(2)
-    col1.metric("This Week's Volume", f"{current_week_vol} mins")
-
-    if len(weekly_totals) > 1:
-        prev_week_vol = weekly_totals.iloc[-2]['Duration']
-        increase = ((current_week_vol - prev_week_vol) / prev_week_vol) * 100
+    # KPIs
+    col1, col2, col3 = st.columns(3)
+    current_vol = weekly.iloc[-1]['Duration']
+    current_load = weekly.iloc[-1]['Load']
+    
+    col1.metric("Weekly Volume", f"{current_vol} min")
+    col2.metric("Weekly Load Score", f"{int(current_load)}")
+    
+    # Coach Logic
+    st.subheader("📋 Coach's Guidance")
+    if len(weekly) > 1:
+        prev_load = weekly.iloc[-2]['Load']
+        diff = ((current_load - prev_load) / prev_load) * 100 if prev_load > 0 else 0
         
-        # Logic Check
-        if len(weekly_totals) % 4 == 0:
-            st.warning("🚨 COACH SAYS: You've completed 3 weeks of build. This should be a **DELOAD WEEK**. Aim for 30% less volume.")
-        elif increase > 10:
-            st.error(f"⚠️ CAUTION: Your volume increased by {increase:.1f}%. Keep it under 10% to stay injury-free!")
+        if len(weekly) % 4 == 0:
+            st.warning("🚨 **TIME TO DELOAD.** You've pushed for 3 weeks. Cut your volume by 30% this week to recover.")
+        elif diff > 15:
+            st.error(f"⚠️ **LOAD SPIKE!** Your intensity/volume jumped {diff:.1f}%. Risk of injury is high. Scale back tomorrow.")
         else:
-            st.success(f"✅ Steady Progress: Volume is up {increase:.1f}%. You are in the green zone.")
+            st.success("✅ **STAY THE COURSE.** Your progression is safe and steady.")
 
-# --- VISUALIZATION ---
-st.subheader("Volume Trend")
-st.line_chart(data=weekly_totals, x='Date', y='Duration')
+    # Chart
+    st.subheader("Training Load Trend")
+    fig = px.bar(weekly, x='Date', y='Load', title="Weekly Training Stress", color_discrete_sequence=['#00CC96'])
+    st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Recent Sessions")
-st.table(df.tail(5))
+else:
+    st.info("Log your first workout in the sidebar to see the magic happen!")
