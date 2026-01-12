@@ -6,7 +6,7 @@ from datetime import datetime
 
 # --- 1. CONFIG (Check these two carefully!) ---
 SHEET_ID = "184l-kXElCBotL4dv0lzyH1_uzQTtZuFkM5obZtsewBQ" 
-SCRIPT_URL = "https://docs.google.com/spreadsheets/d/184l-kXElCBotL4dv0lzyH1_uzQTtZuFkM5obZtsewBQ/edit?gid=0#gid=0"
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoXZ3StdaqI9o-FAkOuIhFq-alDvZmSk4pKeOmcSmDc9MVzRE8RKNNqAWLI2_SEDsL/exec"
 
 # These build the connection strings
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
