@@ -8,7 +8,7 @@ from datetime import datetime
 st.set_page_config(page_title="Tri-Base Builder", layout="wide")
 
 # REPLACE THIS with your ID
-SHEET_ID = "YOUR_ACTUAL_ID_HERE" 
+SHEET_ID = "184l-kXElCBotL4dv0lzyH1_uzQTtZuFkM5obZtsewBQ" 
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv"
 
 # --- DATA LOADING ---
