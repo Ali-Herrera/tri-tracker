@@ -76,6 +76,14 @@ if not df.empty:
                  title="Cumulative Stress Score",
                  color_discrete_sequence=['#00CC96'])
     st.plotly_chart(fig, use_container_width=True)
+    # New Discipline Split Chart
+    st.subheader("Discipline Breakdown (Time)")
+    # Grouping by Sport to see where the minutes go
+    sport_df = df.groupby('Sport')['Duration'].sum().reset_index()
+    fig_pie = px.pie(sport_df, values='Duration', names='Sport', 
+                     hole=0.4, 
+                     color_discrete_sequence=px.colors.qualitative.Safe)
+    st.plotly_chart(fig_pie, use_container_width=True)
 
     # Activity Table
     st.subheader("Recent Activity")
