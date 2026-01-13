@@ -5,8 +5,8 @@ import requests
 from datetime import datetime
 
 # --- 1. CONFIG ---
-SHEET_ID = "YOUR_ID_HERE" 
-SCRIPT_URL = "YOUR_EXEC_URL_HERE"
+SHEET_ID = "184l-kXElCBotL4dv0lzyH1_uzQTtZuFkM5obZtsewBQ" 
+SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZC6mjNrzRn9OnYEMHcSKQvaW7a8fdEd18aytaFIDx_ZmNRhGssb2bZwGX3_M1FxY1/exec"
 
 # Connection string for reading
 SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
