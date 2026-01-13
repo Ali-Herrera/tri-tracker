@@ -81,13 +81,34 @@ if not df.empty:
     col2.metric("Sessions", len(df))
     col3.metric("Avg Intensity", f"{round(df['Intensity'].mean(), 1)}/10")
 
-    # --- THE MULTI-COLOR BAR CHART ---
-    st.subheader("Weekly Training Load by Sport")
-    # Group by Week AND Sport for the colors
+# --- THE MULTI-COLOR BAR CHART WITH TREND LINE ---
+    st.subheader("Weekly Training Load & 4-Week Trend")
+    
+    # 1. Prepare the Bar Data (by Sport)
     weekly_sport = df_sorted.groupby([pd.Grouper(key='Date', freq='W-MON'), 'Sport']).sum(numeric_only=True).reset_index()
     
+    # 2. Prepare the Trend Line Data (Total Weekly Load)
+    # We need a separate dataframe of just the totals to calculate a moving average
+    weekly_totals = weekly_sport.groupby('Date')['Load'].sum().reset_index()
+    weekly_totals['Trend'] = weekly_totals['Load'].rolling(window=4, min_periods=1).mean()
+    
+    # 3. Create the Base Bar Chart
     fig_bar = px.bar(weekly_sport, x='Date', y='Load', color='Sport',
                  color_discrete_map={"Swim": "#00CC96", "Bike": "#636EFA", "Run": "#EF553B", "Strength": "#AB63FA"})
+    
+    # 4. Add the Trend Line on top
+    import plotly.graph_objects as go
+    fig_bar.add_trace(
+        go.Scatter(
+            x=weekly_totals['Date'], 
+            y=weekly_totals['Trend'],
+            mode='lines+markers',
+            name='4-Week Avg',
+            line=dict(color='white', width=3, dash='dot'),
+            marker=dict(size=8)
+        )
+    )
+
     fig_bar.update_layout(barmode='stack', xaxis_title="Week Commencing", yaxis_title="Training Load")
     st.plotly_chart(fig_bar, use_container_width=True)
 
