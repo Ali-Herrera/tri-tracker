@@ -27,15 +27,21 @@ def load_data():
 
 df = load_data()
 
-# --- 3. SIDEBAR ---
+# --- 3. SIDEBAR (Updated for Mobile) ---
 st.sidebar.header("Log Workout")
-date_in = st.sidebar.date_input("Date", datetime.now())
-sport_in = st.sidebar.selectbox("Sport", ["Swim", "Bike", "Run", "Strength"])
-dur_in = st.sidebar.number_input("Duration (mins)", min_value=1, step=5)
-dist_in = st.sidebar.number_input("Distance", min_value=0.0, step=0.1)
-int_in = st.sidebar.slider("Intensity (1-10)", 1, 10, 5)
 
-if st.sidebar.button("🚀 Log to Google Sheets"):
+# Create a form so the sidebar doesn't collapse on mobile after every click
+with st.sidebar.form("workout_form", clear_on_submit=True):
+    date_in = st.date_input("Date", datetime.now())
+    sport_in = st.selectbox("Sport", ["Swim", "Bike", "Run", "Strength"])
+    dur_in = st.number_input("Duration (mins)", min_value=1, step=5)
+    dist_in = st.number_input("Distance", min_value=0.0, step=0.1)
+    int_in = st.slider("Intensity (1-10)", 1, 10, 5)
+    
+    # The button inside a form must be 'form_submit_button'
+    submit_button = st.form_submit_button("🚀 Log to Google Sheets")
+
+if submit_button:
     params = {
         "date": date_in.strftime("%Y-%m-%d"),
         "sport": sport_in,
