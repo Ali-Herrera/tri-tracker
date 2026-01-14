@@ -76,13 +76,21 @@ if not df.empty:
         else:
             st.success(f"✅ **SWEET SPOT:** Steady {int(increase)}% progression.")
     
-    # --- METRICS (Top Row) ---
-    col1, col2, col3 = st.columns(3)
-    total_hrs = round(df['Duration'].sum() / 60, 1)
-    col1.metric("Total Time", f"{total_hrs} Hours")
-    col2.metric("Sessions", len(df))
-    col3.metric("Avg Intensity", f"{round(df['Intensity'].mean(), 1)}/10")
+    # --- SEASON TOTALS (Distance) ---
+    st.subheader("🏁 2026 Season Totals")
+    m_col1, m_col2, m_col3 = st.columns(3)
+    
+    # Calculate distances by sport
+    swim_dist = df[df['Sport'] == 'Swim']['Distance'].sum()
+    bike_dist = df[df['Sport'] == 'Bike']['Distance'].sum()
+    run_dist = df[df['Sport'] == 'Run']['Distance'].sum()
+    
+    # Display them as nice big numbers
+    m_col1.metric("🏊‍♂️ Swim", f"{int(swim_dist)} yds/m")
+    m_col2.metric("🚴‍♂️ Bike", f"{round(bike_dist, 1)} miles")
+    m_col3.metric("🏃‍♂️ Run", f"{round(run_dist, 1)} miles")
 
+    st.divider() # Adds a nice line to separate totals from the rest of the dashboard
     # --- THE HOURLY BAR CHART WITH TREND LINE ---
     st.subheader("Weekly Training Volume (Hours)")
     
