@@ -53,6 +53,22 @@ if submit_button:
         st.sidebar.warning("Syncing... Refresh in a moment.")
         # --- 4. DASHBOARD ---
 st.title("🏊‍♂️ My Training Dashboard")
+# --- RACE COUNTDOWN ---
+race_date = datetime(2026, 6, 21)
+days_to_go = (race_date - datetime.now()).days
+
+if days_to_go > 0:
+    st.info(f"🗓️ **{days_to_go} Days** until the first Sprint Tri window (June 21)")
+    
+    # Progress bar towards June 21 (assuming a 20-week build)
+    progress = max(0, min(100, int((1 - (days_to_go / 140)) * 100)))
+    st.progress(progress, text=f"Season Build: {progress}%")
+    
+    with st.expander("View Summer Race Schedule"):
+        st.write("Targeting one of these Sprint dates:")
+        st.write("✅ **June 21** | July 12 | July 26 | August 9")
+else:
+    st.success("🏁 It's Race Season!")
 
 if not df.empty:
     # --- COACH'S ANALYSIS ---
