@@ -159,13 +159,11 @@ if not df.empty:
     fig_pie = px.pie(sport_df, values='Duration', names='Sport', hole=0.4)
     st.plotly_chart(fig_pie, use_container_width=True)
 
-    st.subheader("Recent Activity")
-    st.dataframe(df[['Date', 'Sport', 'Duration', 'Distance', 'Load']], use_container_width=True)
-else:
+  # --- TABLE ---
     st.subheader("Recent Activity")
     st.dataframe(df[['Date', 'Sport', 'Duration', 'Distance', 'Load']], use_container_width=True)
 
-    # --- MOVED: LIFETIME TOTALS (Now inside the 'if' block) ---
+    # --- LIFETIME TOTALS ---
     st.divider()
     st.subheader("🏆 Lifetime Totals")
     st.write(f"Since your first triathlon on {df['Date'].min().strftime('%B %d, %Y')}")
@@ -182,7 +180,6 @@ else:
     l_col3.metric("Total Bike", f"{int(total_bike)} mi")
     l_col4.metric("Total Run", f"{int(total_run)} mi")
 
+# This 'else' must be all the way to the left, matching the 'if' at the top of Section 4
 else:
     st.info("Awaiting training data...")
-    st.info("Awaiting training data...")
-   
