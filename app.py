@@ -162,15 +162,16 @@ if not df.empty:
     st.subheader("Recent Activity")
     st.dataframe(df[['Date', 'Sport', 'Duration', 'Distance', 'Load']], use_container_width=True)
 else:
-    st.info("Awaiting training data...")
-    # --- LIFETIME TOTALS (All History) ---
+    st.subheader("Recent Activity")
+    st.dataframe(df[['Date', 'Sport', 'Duration', 'Distance', 'Load']], use_container_width=True)
+
+    # --- MOVED: LIFETIME TOTALS (Now inside the 'if' block) ---
     st.divider()
     st.subheader("🏆 Lifetime Totals")
     st.write(f"Since your first triathlon on {df['Date'].min().strftime('%B %d, %Y')}")
     
     l_col1, l_col2, l_col3, l_col4 = st.columns(4)
     
-    # Calculate everything from the full 'df' (which includes 2025 and 2026)
     total_swim = df[df['Sport'] == 'Swim']['Distance'].sum()
     total_bike = df[df['Sport'] == 'Bike']['Distance'].sum()
     total_run = df[df['Sport'] == 'Run']['Distance'].sum()
@@ -181,3 +182,7 @@ else:
     l_col3.metric("Total Bike", f"{int(total_bike)} mi")
     l_col4.metric("Total Run", f"{int(total_run)} mi")
 
+else:
+    st.info("Awaiting training data...")
+    st.info("Awaiting training data...")
+   
