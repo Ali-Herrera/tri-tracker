@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- 1. CONFIG (RE-PASTE YOUR KEYS HERE) ---
 SHEET_ID = "184l-kXElCBotL4dv0lzyH1_uzQTtZuFkM5obZtsewBQ" 
