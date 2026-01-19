@@ -71,7 +71,19 @@ if submit_button:
         st.sidebar.warning("Syncing... Refresh in a moment.")
         # --- 4. DASHBOARD ---
 st.title("🏊‍♂️ My Training Dashboard")
+# --- RACE COUNTDOWN ---
+race_date = datetime(2026, 6, 21)
+days_to_race = (race_date - datetime.now()).days
 
+if days_to_race > 0:
+    st.info(f"🏁 **{days_to_race} Days** until your next Triathlon! (June 21, 2026)")
+elif days_to_race == 0:
+    st.balloons()
+    st.success("🎉 Today is RACE DAY! Good luck!")
+else:
+    st.write("Hope the race went well! Time to set a new goal.")
+
+st.divider()
 # --- DATE FILTER (Internal Logic) ---
 # We use df_filtered for the charts/coach, but keep df for Lifetime stats
 today = datetime.now()
