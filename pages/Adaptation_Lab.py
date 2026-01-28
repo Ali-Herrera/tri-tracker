@@ -22,6 +22,18 @@ st.title("🏊‍♂️🚴‍♂️🏃‍♂️ Adaptation Lab")
 with st.sidebar:
     st.header("Log Session")
     date = st.date_input("Workout Date", datetime.now())
+    # Separate the 'Work' from the 'Recovery'
+steady_state_df = df[df['Type'] == "Steady State (Post-Intervals)"]
+recovery_df = df[df['Type'] == "Pure Aerobic (Recovery)"]
+
+# Calculate your 'Baseline Recovery EF' (Average of all recovery rides)
+if not recovery_df.empty:
+    avg_recovery_ef = recovery_df['EF'].mean()
+    latest_recovery_ef = recovery_df['EF'].iloc[-1]
+    
+    # If your latest recovery is much worse than your average, show a warning
+    if latest_recovery_ef < (avg_recovery_ef * 0.95):
+        st.warning("⚠️ Fatigue Alert: Your recovery efficiency is lower than usual. Consider an extra rest day.")
     discipline = st.selectbox("Discipline", ["Swim", "Bike", "Run"])
     # --- SIDEBAR INPUTS ---
 st.sidebar.header("Log New Session")
