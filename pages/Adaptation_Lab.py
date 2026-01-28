@@ -59,10 +59,46 @@ with st.sidebar:
 st.divider()
 
 if not df.empty:
-    st.subheader("Raw Data Preview")
-    st.dataframe(df.tail(5)) # Shows the last 5 entries
+    # 1. Grab the most recent session data
+    latest_session = df.iloc[-1]
+    latest_drift = latest_session['Decoupling']
+    latest_ef = latest_session['EF']
+    
+    # 2. Status Traffic Light Logic
+    st.subheader("🚀 Coach's Recommendation")
+    
+    col_a, col_b = st.columns([1, 3])
+    
+    with col_a:
+        if latest_drift <= 5.0:
+            st.title("🟢")
+            status = "GREEN LIGHT"
+        elif latest_drift <= 10.0:
+            st.title("🟡")
+            status = "CAUTION"
+        else:
+            st.title("🔴")
+            status = "RED LIGHT"
+            
+    with col_b:
+        st.metric("Latest Decoupling", f"{latest_drift}%", delta="- Stable" if latest_drift <= 5 else "+ Drifting")
+        
+        if status == "GREEN LIGHT":
+            st.write(f"**Action:** Your aerobic engine is stable at this load. You've earned a **10-15% increase** in duration or a small intensity jump.")
+        elif status == "CAUTION":
+            st.write(f"**Action:** You're adapting, but your heart rate is still drifting. **Hold** this current volume for 1-2 more sessions.")
+        else:
+            st.write(f"**Action:** High cardiac drift detected. This load is currently too high. **Back off** duration or intensity to recover.")
 
-    tab1, tab2 = st.tabs(["Efficiency Trends", "Decoupling Calculator"])
-    # ... (rest of the tab code)
+    # 3. Trends Tabs
+    tab1, tab2 = st.tabs(["📈 Efficiency Trends", "🧮 Manual Calculator"])
+    
+    with tab1:
+        steady_df = df[df['Type'] == "Steady State (Z2)"]
+        if not steady_df.empty:
+            st.line_chart(steady_df, x="Date", y="EF", color="Discipline")
+        else:
+            st.info("Log a 'Steady State (Z2)' session to see your fitness trend.")
+
 else:
-    st.warning("The app is connected, but the dataframe is empty. Try adding a session in the sidebar!")
+    st.info("Awaiting your first workout log to provide recommendations.")
