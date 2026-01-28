@@ -23,8 +23,17 @@ with st.sidebar:
     st.header("Log Session")
     date = st.date_input("Workout Date", datetime.now())
     discipline = st.selectbox("Discipline", ["Swim", "Bike", "Run"])
-    w_type = st.selectbox("Session Type", ["Steady State (Z2)", "Tempo/Sweet Spot", "Intervals"])
-    
+    # --- SIDEBAR INPUTS ---
+st.sidebar.header("Log New Session")
+
+# Replace your old 'type' selectbox with this:
+workout_options = [
+    "Steady State (Post-Intervals)", 
+    "Progressive Build (Ride 6)", 
+    "Pure Aerobic (Recovery)",
+    "Other"
+]
+type_selection = st.sidebar.selectbox("Workout Category", options=workout_options)
     avg_hr = st.number_input("Avg Heart Rate", value=140)
     
     if discipline == "Bike":
