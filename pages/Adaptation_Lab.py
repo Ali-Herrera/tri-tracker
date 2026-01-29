@@ -67,50 +67,32 @@ if not df.empty:
         else:
             col2.success("✅ System Ready: Recovery metrics are stable.")
 
-# --- DASHBOARD ---
+# --- DASHBOARD SUMMARY ---
 st.divider()
 
 if not df.empty:
-    # 1. Grab the most recent session data
-    latest_session = df.iloc[-1]
-    latest_drift = latest_session['Decoupling']
-    latest_ef = latest_session['EF']
+    # Ensure Date is datetime for filtering
+    df['Date'] = pd.to_datetime(df['Date'])
     
-    # 2. Status Traffic Light Logic
-    st.subheader("🚀 Coach's Recommendation")
+    # Filter for the last 7 days
+    last_7_days = df[df['Date'] > (pd.Timestamp.now() - pd.Timedelta(days=7))]
     
-    col_a, col_b = st.columns([1, 3])
+    st.subheader("🗓️ Weekly Performance Report")
+    col1, col2, col3 = st.columns(3)
     
-    with col_a:
-        if latest_drift <= 5.0:
-            st.title("🟢")
-            status = "GREEN LIGHT"
-        elif latest_drift <= 10.0:
-            st.title("🟡")
-            status = "CAUTION"
-        else:
-            st.title("🔴")
-            status = "RED LIGHT"
-            
-    with col_b:
-        st.metric("Latest Decoupling", f"{latest_drift}%", delta="- Stable" if latest_drift <= 5 else "+ Drifting")
-        
-        if status == "GREEN LIGHT":
-            st.write(f"**Action:** Your aerobic engine is stable at this load. You've earned a **10-15% increase** in duration or a small intensity jump.")
-        elif status == "CAUTION":
-            st.write(f"**Action:** You're adapting, but your heart rate is still drifting. **Hold** this current volume for 1-2 more sessions.")
-        else:
-            st.write(f"**Action:** High cardiac drift detected. This load is currently too high. **Back off** duration or intensity to recover.")
+    # 1. Volume Count
+    col1.metric("Sessions (7d)", len(last_7_days))
+    
+    # 2. Green Light Count
+    green_lights = len(last_7_days[last_7_days['Decoupling'] <= 5.0])
+    col2.metric("Stable Sessions", f"{green_lights} ✅")
+    
+    # 3. Avg Efficiency Factor
+    if not last_7_days.empty:
+        avg_ef = last_7_days['EF'].mean()
+        col3.metric("Avg Weekly EF", f"{avg_ef:.2f}")
+    else:
+        col3.metric("Avg Weekly EF", "N/A")
 
-    # 3. Trends Tabs
-    tab1, tab2 = st.tabs(["📈 Efficiency Trends", "🧮 Manual Calculator"])
-    
-    with tab1:
-        steady_df = df[df['Type'] == "Steady State (Z2)"]
-        if not steady_df.empty:
-            st.line_chart(steady_df, x="Date", y="EF", color="Discipline")
-        else:
-            st.info("Log a 'Steady State (Z2)' session to see your fitness trend.")
-
-else:
-    st.info("Awaiting your first workout log to provide recommendations.")
+    # --- RECOVERY & COACH'S REC SECTIONS ---
+    # (Keep the Recovery and Recommendation logic we built earlier here)
