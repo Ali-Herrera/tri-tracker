@@ -5,13 +5,15 @@ from datetime import datetime
 
 st.set_page_config(page_title="Adaptation Lab", layout="wide")
 
-# 1. Define the URL globally
-SHEET_URL = "https://docs.google.com/spreadsheets/d/12zB73yww1IyPSVfhlofLJ4VV7Se-V3iBKd_tnwbRdWM/edit?usp=sharing"
+# --- THE IDENTIFIER ---
+# We are using the ID directly to avoid the "Spreadsheet must be specified" error
+SHEET_ID = "12zB73yww1IyPSVfhlofLJ4VV7Se-V3iBKd_tnwbRdWM"
+SHEET_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit?usp=sharing"
 
-# 2. Establish Connection
+# --- CONNECT ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# 3. Read Data
+# Read data (using the URL for reading is usually fine)
 df = conn.read(spreadsheet=SHEET_URL, ttl=0)
 df['Date'] = pd.to_datetime(df['Date'])
 
@@ -33,7 +35,6 @@ with st.sidebar:
     
     date_selection = st.date_input("Workout Date", value=datetime.now())
 
-    # Dynamic labels
     if discipline == "Bike":
         work_label, work_value = "Avg Power (Watts)", 130
     elif discipline == "Run":
@@ -45,7 +46,7 @@ with st.sidebar:
     avg_hr = st.number_input("Avg Heart Rate (BPM)", min_value=0, value=120)
     drift = st.number_input("Decoupling / Drift (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1)
 
-    # THE SAVE BUTTON (Inside the Sidebar)
+    # THE SAVE BUTTON
     if st.button("Save to Google Sheets"):
         ef_val = avg_work / avg_hr if avg_hr > 0 else 0
         
@@ -58,14 +59,14 @@ with st.sidebar:
         }])
         
         try:
-            # We use the variable SHEET_URL explicitly here
-            conn.create(spreadsheet=SHEET_URL, worksheet="Sheet1", data=new_row)
+            # FIX: Using the SHEET_ID explicitly here to force the connection
+            conn.create(spreadsheet=SHEET_ID, worksheet="Sheet1", data=new_row)
             st.success("Session Logged! Click 'R' to refresh.")
-            st.balloons() # Just for a bit of fun when it finally works!
+            st.balloons()
         except Exception as e:
             st.error(f"Write Error: {e}")
 
-# --- MAIN DASHBOARD SUMMARY ---
+# --- MAIN DASHBOARD ---
 if not df.empty:
     st.subheader("🗓️ Weekly Performance Report")
     last_7_days = df[df['Date'] > (pd.Timestamp.now() - pd.Timedelta(days=7))]
@@ -82,8 +83,8 @@ if not df.empty:
     
     st.divider()
     
-    # Show the table
     st.subheader("📊 Recent Raw Data")
+    # Sorting by date so newest is at the top
     st.dataframe(df.sort_values(by="Date", ascending=False), use_container_width=True)
 else:
     st.info("No data found. Log your first session in the sidebar!")
