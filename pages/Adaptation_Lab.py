@@ -8,14 +8,20 @@ st.set_page_config(page_title="Adaptation Lab", layout="wide")
 # THE IDENTIFIER
 SHEET_URL = "https://docs.google.com/spreadsheets/d/12zB73yww1IyPSVfhlofLJ4VV7Se-V3iBKd_tnwbRdWM/edit?usp=sharing"
 
-# CONNECT
+# --- CONNECT ---
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # Read current data
 df = conn.read(spreadsheet=SHEET_URL, ttl=0)
-df['Date'] = pd.to_datetime(df['Date'])
 
-st.title("🏊‍♂️🚴‍♂️🏃‍♂️ Adaptation Lab")
+# CLEANING STEP: Remove any completely empty rows and fix dates
+if not df.empty:
+    # Drop rows where 'Date' is missing
+    df = df.dropna(subset=['Date'])
+    # Convert dates, turning errors into "NaT" (Not a Time) so the app doesn't crash
+    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+    # Remove any rows that failed the date conversion
+    df = df.dropna(subset=['Date'])
 
 # --- SIDEBAR: LOG NEW SESSION ---
 with st.sidebar:
