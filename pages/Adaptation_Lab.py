@@ -38,7 +38,6 @@ if not recovery_df.empty:
     # --- SIDEBAR INPUTS ---
 st.sidebar.header("Log New Session")
 
-# Replace your old 'type' selectbox with this:
 workout_options = [
     "Steady State (Post-Intervals)", 
     "Progressive Build (Ride 6)", 
@@ -46,35 +45,27 @@ workout_options = [
     "Other"
 ]
 type_selection = st.sidebar.selectbox("Workout Category", options=workout_options)
-    avg_hr = st.number_input("Avg Heart Rate", value=140)
+
+# --- RECOVERY MONITORING LOGIC ---
+# Place this after you've defined 'df' (the part where you read from Google Sheets)
+if not df.empty:
+    recovery_df = df[df['Type'] == "Pure Aerobic (Recovery)"]
     
-    if discipline == "Bike":
-        val = st.number_input("Avg Power (Watts)", value=200)
-        ef = val / avg_hr
-    else:
-        p_min = st.number_input("Pace Min", value=5)
-        p_sec = st.number_input("Pace Sec", value=0)
-        total_sec = (p_min * 60) + p_sec
-        speed = 1000 / total_sec if total_sec > 0 else 0
-        ef = speed / avg_hr
-
-    drift = st.number_input("Decoupling % (if known)", value=0.0)
-
-    if st.button("Save to Google Sheets"):
-        # Create new row
-        new_data = pd.DataFrame([{
-            "Date": str(date),
-            "Discipline": discipline,
-            "Type": w_type,
-            "EF": round(ef, 4),
-            "Decoupling": drift
-        }])
+    if not recovery_df.empty:
+        st.subheader("🔋 Recovery & Freshness")
+        latest_rec = recovery_df.iloc[-1]
         
-        # Add to existing data and update sheet
-        updated_df = pd.concat([df, new_data], ignore_index=True)
-        conn.update(spreadsheet=url, data=updated_df)
-        st.success("Synced to Google Sheets!")
-        st.rerun()
+        # We compare the latest recovery EF to the average of previous ones
+        avg_rec_ef = recovery_df['EF'].mean()
+        efficiency_drop = (latest_rec['EF'] / avg_rec_ef) - 1
+        
+        col1, col2 = st.columns(2)
+        col1.metric("Recovery EF", f"{latest_rec['EF']:.2f}", f"{efficiency_drop:.1%}")
+        
+        if efficiency_drop < -0.05:
+            col2.error("🚨 System Fatigued: Efficiency is significantly down. Prioritize sleep.")
+        else:
+            col2.success("✅ System Ready: Recovery metrics are stable.")
 
 # --- DASHBOARD ---
 st.divider()
