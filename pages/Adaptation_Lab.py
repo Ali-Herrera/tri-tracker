@@ -35,8 +35,11 @@ if not recovery_df.empty:
     if latest_recovery_ef < (avg_recovery_ef * 0.95):
         st.warning("⚠️ Fatigue Alert: Your recovery efficiency is lower than usual. Consider an extra rest day.")
     discipline = st.selectbox("Discipline", ["Swim", "Bike", "Run"])
-    # --- SIDEBAR INPUTS ---
+   # --- SIDEBAR INPUTS ---
 st.sidebar.header("Log New Session")
+
+# 1. The "Where" and "What"
+discipline = st.sidebar.selectbox("Discipline", options=["Bike", "Run", "Swim"])
 
 workout_options = [
     "Steady State (Post-Intervals)", 
@@ -46,6 +49,39 @@ workout_options = [
 ]
 type_selection = st.sidebar.selectbox("Workout Category", options=workout_options)
 
+date_selection = st.sidebar.date_input("Workout Date")
+
+# 2. The "Data" (This is likely what went missing!)
+if discipline == "Bike":
+    work_label = "Avg Power (Watts)"
+    work_value = 130
+elif discipline == "Run":
+    work_label = "Avg Pace (Meters/Min)"
+    work_value = 200
+else:
+    work_label = "Avg Speed/Pace"
+    work_value = 100
+
+avg_work = st.sidebar.number_input(work_label, min_value=0, value=work_value)
+avg_hr = st.sidebar.number_input("Avg Heart Rate (BPM)", min_value=0, value=120)
+drift = st.sidebar.number_input("Decoupling / Drift (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1)
+
+# 3. The Save Button
+if st.sidebar.button("Save to Google Sheets"):
+    # Calculate EF before saving
+    ef_val = avg_work / avg_hr if avg_hr > 0 else 0
+    
+    new_data = pd.DataFrame([{
+        "Date": date_selection.strftime("%Y-%m-%d"),
+        "Discipline": discipline,
+        "Type": type_selection,
+        "EF": round(ef_val, 4),
+        "Decoupling": drift
+    }])
+    
+    # Append to Google Sheets
+    conn.create(data=new_data)
+    st.sidebar.success("Session Logged! Refresh to see the chart.")
 # --- RECOVERY MONITORING LOGIC ---
 # Place this after you've defined 'df' (the part where you read from Google Sheets)
 if not df.empty:
