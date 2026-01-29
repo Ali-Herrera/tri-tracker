@@ -46,7 +46,7 @@ with st.sidebar:
     avg_hr = st.number_input("Avg Heart Rate (BPM)", min_value=0, value=120)
     drift = st.number_input("Decoupling / Drift (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1)
 
-    if st.button("Save to Google Sheets"):
+if st.button("Save to Google Sheets"):
         # Calculate EF automatically
         ef_val = avg_work / avg_hr if avg_hr > 0 else 0
         
@@ -58,10 +58,14 @@ with st.sidebar:
             "Decoupling": drift
         }])
         
-        # Write back to Google Sheets
-        conn.create(spreadsheet=url, data=new_row)
-        st.success("Session Logged! Refresh the page to update charts.")
-
+        # --- THE FIX IS HERE ---
+        # We use worksheet="Sheet1" (or whatever your tab name is) 
+        # instead of spreadsheet=url
+        try:
+            conn.create(worksheet="Sheet1", data=new_row)
+            st.success("Session Logged! Refresh the page to update charts.")
+        except Exception as e:
+            st.error(f"Write Error: Check if your Google Sheet tab is named 'Sheet1'. Error: {e}")
 # --- MAIN DASHBOARD ---
 
 if not df.empty:
