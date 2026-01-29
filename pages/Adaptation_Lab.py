@@ -83,3 +83,21 @@ if not df.empty:
     st.dataframe(df.sort_values(by="Date", ascending=False), use_container_width=True)
 else:
     st.info("No data found. Log your first session in the sidebar!")
+    # --- VISUAL TREND CHART ---
+    st.divider()
+    st.subheader("📈 Aerobic Progress Trends")
+    
+    # Sort by date for the chart to make sense
+    chart_df = df.sort_values(by="Date")
+    
+    # Create two tabs for the different metrics
+    tab1, tab2 = st.tabs(["Efficiency Factor", "Decoupling (Drift)"])
+    
+    with tab1:
+        st.line_chart(data=chart_df, x="Date", y="EF", use_container_width=True)
+        st.caption("Goal: A steady climb over weeks and months.")
+        
+    with tab2:
+        # Adding a red line at 5% to show your 'Stability' target
+        st.line_chart(data=chart_df, x="Date", y="Decoupling", use_container_width=True)
+        st.caption("Goal: Stay below 5% (The Green Light Zone).")
