@@ -70,7 +70,12 @@ with st.sidebar:
 # --- MAIN DASHBOARD ---
 if not df.empty:
     st.subheader("🗓️ Weekly Performance Report")
-    # Filter for the last 7 days (normalized to remove time-of-day bias)
+    
+    # Cleaning for calculations
+    df['EF'] = pd.to_numeric(df['EF'], errors='coerce')
+    df['Decoupling'] = pd.to_numeric(df['Decoupling'], errors='coerce')
+    
+    # Filter for the last 7 days
     cutoff = pd.Timestamp.now().normalize() - pd.Timedelta(days=7)
     last_7_days = df[df['Date'] >= cutoff]
     
@@ -85,25 +90,26 @@ if not df.empty:
         col3.metric("Avg Weekly EF", f"{avg_ef:.2f}")
     
     st.divider()
+    
+    # --- NEW STATUS LOGIC ---
+    def get_status(row):
+        if row['Decoupling'] <= 5.0:
+            return "🟢 Aerobically Stable"
+        elif row['Decoupling'] <= 8.0:
+            return "🟡 Developing"
+        else:
+            return "🔴 High Fatigue/Under-recovered"
+
+    # Create a display version of the dataframe
+    display_df = df.copy()
+    display_df['Status'] = display_df.apply(get_status, axis=1)
+    
     st.subheader("📊 Recent Raw Data")
-    st.dataframe(df.sort_values(by="Date", ascending=False), use_container_width=True)
-else:
-    st.info("No data found. Log your first session in the sidebar!")
-    # --- VISUAL TREND CHART ---
-    st.divider()
-    st.subheader("📈 Aerobic Progress Trends")
-    
-    # Sort by date for the chart to make sense
-    chart_df = df.sort_values(by="Date")
-    
-    # Create two tabs for the different metrics
-    tab1, tab2 = st.tabs(["Efficiency Factor", "Decoupling (Drift)"])
-    
-    with tab1:
-        st.line_chart(data=chart_df, x="Date", y="EF", use_container_width=True)
-        st.caption("Goal: A steady climb over weeks and months.")
-        
-    with tab2:
-        # Adding a red line at 5% to show your 'Stability' target
-        st.line_chart(data=chart_df, x="Date", y="Decoupling", use_container_width=True)
-        st.caption("Goal: Stay below 5% (The Green Light Zone).")
+    # Show the table with the new Status column
+    st.dataframe(
+        display_df.sort_values(by="Date", ascending=False), 
+        use_container_width=True,
+        column_order=("Date", "Discipline", "Type", "EF", "Decoupling", "Status")
+    )
+
+    # --- KEEP YOUR TREND CHARTS BELOW THIS ---
