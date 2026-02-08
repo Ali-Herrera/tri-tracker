@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import {
   addDoc,
@@ -49,8 +49,8 @@ export default function References() {
   const { user } = useAuth();
   const { addPlannedWorkout } = usePlannedWorkoutActions();
   const [saveStatus, setSaveStatus] = useState('');
-  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const loadedRef = useRef(false);
   const [planDate, setPlanDate] = useState(() =>
     format(new Date(), 'yyyy-MM-dd'),
   );
@@ -116,6 +116,7 @@ export default function References() {
         setCustomSections([]);
       }
       setLoading(false);
+      loadedRef.current = true;
     });
 
     return unsubscribe;
@@ -160,24 +161,25 @@ export default function References() {
     return unsubscribe;
   }, [user]);
 
-  const handleSave = async () => {
-    if (!docRef) return;
-    setSaving(true);
-    await setDoc(
-      docRef,
-      {
-        customSections,
-        metrics: [],
-        dosages: [],
-        phases: [],
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
-    setSaving(false);
-    setSaveStatus('Saved!');
-    setTimeout(() => setSaveStatus(''), 2000);
-  };
+  useEffect(() => {
+    if (!docRef || !loadedRef.current) return;
+    const timeout = setTimeout(async () => {
+      await setDoc(
+        docRef,
+        {
+          customSections,
+          metrics: [],
+          dosages: [],
+          phases: [],
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      );
+      setSaveStatus('Saved!');
+      setTimeout(() => setSaveStatus(''), 1500);
+    }, 800);
+    return () => clearTimeout(timeout);
+  }, [customSections, docRef]);
 
   const handleFiles = (files?: FileList | null) => {
     if (!files || files.length === 0 || !user) return;
@@ -325,14 +327,7 @@ export default function References() {
     <div className='dashboard'>
       <div className='page-header'>
         <h1>References</h1>
-        <button
-          className='filter-btn'
-          type='button'
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : 'Save References'}
-        </button>
+        {saveStatus && <span className='success-text'>{saveStatus}</span>}
       </div>
 
       <section className='ref-grid'>
@@ -611,7 +606,6 @@ export default function References() {
         </div>
       </section>
 
-      {saveStatus && <p className='success-text'>{saveStatus}</p>}
     </div>
   );
 }
