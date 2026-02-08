@@ -17,6 +17,7 @@ import { useUserPlannedWorkouts } from '../hooks/useUserPlannedWorkouts';
 import { useUserWorkouts } from '../hooks/useUserWorkouts';
 import ActivityLog from '../components/ActivityLog';
 import CalendarGrid from '../components/CalendarGrid';
+import LifetimeTotals from '../components/LifetimeTotals';
 import WeeklyVolumeChart from '../components/WeeklyVolumeChart';
 
 const noop = () => {};
@@ -112,6 +113,10 @@ export default function FriendProfile() {
           <h2>Goals</h2>
           <p>{profile.goals}</p>
         </section>
+      )}
+
+      {!workoutsLoading && (
+        <LifetimeTotals workouts={workouts} timeFrame='All Time' />
       )}
 
       <section>
