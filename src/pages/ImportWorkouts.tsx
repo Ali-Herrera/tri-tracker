@@ -8,21 +8,30 @@ type CsvRow = Record<string, string>;
 type DurationUnit = 'seconds' | 'minutes';
 
 type DistanceUnit = 'meters' | 'kilometers' | 'miles' | 'yards';
+type SwimDistanceUnit = 'yards' | 'meters';
 
-const DISTANCE_UNITS: DistanceUnit[] = [
+const BIKE_RUN_DISTANCE_UNITS: DistanceUnit[] = [
   'meters',
   'kilometers',
   'miles',
   'yards',
 ];
 
-const DURATION_UNITS: DurationUnit[] = ['seconds', 'minutes'];
+const SWIM_DISTANCE_UNITS: SwimDistanceUnit[] = ['yards', 'meters'];
+
+const DURATION_UNITS: DurationUnit[] = ['minutes', 'seconds'];
 
 const metersPerMile = 1609.34;
 const metersPerYard = 0.9144;
 
 const guessColumn = (fields: string[], options: string[]) => {
-  const lowerFields = fields.map((field) => field.toLowerCase());
+  const lowerFields = fields.map((field) => field.toLowerCase().trim());
+  // Prefer exact matches first
+  for (const option of options) {
+    const exactIndex = lowerFields.findIndex((field) => field === option);
+    if (exactIndex >= 0) return fields[exactIndex];
+  }
+  // Fall back to substring matches
   for (const option of options) {
     const matchIndex = lowerFields.findIndex((field) => field.includes(option));
     if (matchIndex >= 0) return fields[matchIndex];
@@ -32,7 +41,21 @@ const guessColumn = (fields: string[], options: string[]) => {
 
 const parseNumber = (value: string) => {
   if (!value) return 0;
-  const cleaned = value.replace(/[^0-9.-]/g, '');
+  let cleaned = value.trim();
+  // Handle European comma-decimal format: "5,02" or "1.234,56"
+  // If there's a comma but no dot after it, treat comma as decimal separator
+  if (cleaned.includes(',')) {
+    const lastComma = cleaned.lastIndexOf(',');
+    const lastDot = cleaned.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      // Comma is the decimal separator (e.g., "1.234,56" or "5,02")
+      cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else {
+      // Comma is thousands separator (e.g., "1,234.56")
+      cleaned = cleaned.replace(/,/g, '');
+    }
+  }
+  cleaned = cleaned.replace(/[^0-9.-]/g, '');
   const parsed = Number(cleaned);
   return Number.isFinite(parsed) ? parsed : 0;
 };
@@ -59,10 +82,20 @@ const parseDurationValue = (value: string, unit: DurationUnit) => {
 
 const convertDistance = (
   distance: number,
-  unit: DistanceUnit,
+  bikeRunUnit: DistanceUnit,
+  swimUnit: SwimDistanceUnit,
   sport: Sport,
+  autoDetectMetric: boolean,
 ) => {
   if (!distance || sport === 'Strength') return 0;
+  if (sport === 'Swim') {
+    if (swimUnit === 'yards') return distance;
+    return distance / metersPerYard;
+  }
+  let unit = bikeRunUnit;
+  if (autoDetectMetric && bikeRunUnit !== 'meters' && distance >= 1000) {
+    unit = 'meters';
+  }
   let meters = distance;
   switch (unit) {
     case 'kilometers':
@@ -77,9 +110,6 @@ const convertDistance = (
     default:
       meters = distance;
   }
-  if (sport === 'Swim') {
-    return meters / metersPerYard;
-  }
   return meters / metersPerMile;
 };
 
@@ -89,6 +119,7 @@ const normalizeSport = (value: string) => {
   if (
     label.includes('ride') ||
     label.includes('bike') ||
+    label.includes('biking') ||
     label.includes('cycle') ||
     label.includes('cycling') ||
     label.includes('trainer') ||
@@ -110,7 +141,13 @@ const normalizeSport = (value: string) => {
     label.includes('workout') ||
     label.includes('yoga') ||
     label.includes('boulder') ||
-    label.includes('climb')
+    label.includes('climb') ||
+    label.includes('cardio') ||
+    label.includes('hiit') ||
+    label.includes('pilates') ||
+    label.includes('elliptical') ||
+    label.includes('rowing') ||
+    label.includes('row ')
   ) {
     return 'Strength';
   }
@@ -137,8 +174,12 @@ export default function ImportWorkouts() {
   const [sportColumn, setSportColumn] = useState('');
   const [durationColumn, setDurationColumn] = useState('');
   const [distanceColumn, setDistanceColumn] = useState('');
-  const [durationUnit, setDurationUnit] = useState<DurationUnit>('seconds');
-  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>('meters');
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>('minutes');
+  const [bikeRunDistanceUnit, setBikeRunDistanceUnit] =
+    useState<DistanceUnit>('miles');
+  const [swimDistanceUnit, setSwimDistanceUnit] =
+    useState<SwimDistanceUnit>('yards');
+  const [autoDetectMetric, setAutoDetectMetric] = useState(true);
   const [intensity, setIntensity] = useState(5);
 
   const preview = useMemo(() => {
@@ -155,7 +196,13 @@ export default function ImportWorkouts() {
         const distanceRaw = distanceColumn
           ? parseNumber(row[distanceColumn])
           : 0;
-        const distance = convertDistance(distanceRaw, distanceUnit, sport);
+        const distance = convertDistance(
+          distanceRaw,
+          bikeRunDistanceUnit,
+          swimDistanceUnit,
+          sport,
+          autoDetectMetric,
+        );
         return {
           date,
           sport,
@@ -180,7 +227,9 @@ export default function ImportWorkouts() {
     durationColumn,
     distanceColumn,
     durationUnit,
-    distanceUnit,
+    bikeRunDistanceUnit,
+    swimDistanceUnit,
+    autoDetectMetric,
     intensity,
   ]);
 
@@ -200,15 +249,55 @@ export default function ImportWorkouts() {
           guessColumn(fields, ['activity date', 'start date', 'date']),
         );
         setSportColumn(guessColumn(fields, ['activity type', 'sport', 'type']));
-        setDurationColumn(
-          guessColumn(fields, [
-            'moving time',
-            'elapsed time',
-            'duration',
-            'time',
-          ]),
-        );
+        const durCol = guessColumn(fields, [
+          'moving time',
+          'elapsed time',
+          'duration',
+          'time',
+        ]);
+        setDurationColumn(durCol);
         setDistanceColumn(guessColumn(fields, ['distance']));
+
+        // Auto-detect duration unit from data patterns
+        if (durCol) {
+          const sampleValues = result.data
+            .slice(0, 30)
+            .map((row) => row[durCol]?.trim())
+            .filter(Boolean);
+          const hasColons = sampleValues.some((v) => v.includes(':'));
+          if (!hasColons) {
+            // Plain numbers: if average > 300, likely seconds
+            const nums = sampleValues.map((v) => parseNumber(v)).filter((n) => n > 0);
+            if (nums.length > 0) {
+              const avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+              setDurationUnit(avg > 300 ? 'seconds' : 'minutes');
+            }
+          }
+          // HH:MM:SS is always parsed to minutes regardless of unit setting
+        }
+
+        // Auto-detect distance unit from data patterns
+        const distCol = guessColumn(fields, ['distance']);
+        const sportCol = guessColumn(fields, ['activity type', 'sport', 'type']);
+        if (distCol) {
+          const sampleDistances = result.data
+            .slice(0, 50)
+            .filter((row) => {
+              if (!sportCol) return true;
+              const sport = normalizeSport(row[sportCol] || '');
+              return sport === 'Bike' || sport === 'Run';
+            })
+            .map((row) => parseNumber(row[distCol]))
+            .filter((d) => d > 0);
+          if (sampleDistances.length > 0) {
+            const avg =
+              sampleDistances.reduce((a, b) => a + b, 0) / sampleDistances.length;
+            if (avg > 200) {
+              // Values like 5000, 10000 → almost certainly meters
+              setBikeRunDistanceUnit('meters');
+            }
+          }
+        }
       },
       error: (err) => {
         const message = err instanceof Error ? err.message : 'Parse failed.';
@@ -269,104 +358,129 @@ export default function ImportWorkouts() {
         </label>
 
         {headers.length > 0 && (
-          <div className='import-grid'>
+          <>
             <label>
-              Date Column
-              <select
-                value={dateColumn}
-                onChange={(e) => setDateColumn(e.target.value)}
-              >
-                <option value=''>Select...</option>
-                {headers.map((header) => (
-                  <option key={header} value={header}>
-                    {header}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Sport Column
-              <select
-                value={sportColumn}
-                onChange={(e) => setSportColumn(e.target.value)}
-              >
-                <option value=''>Select...</option>
-                {headers.map((header) => (
-                  <option key={header} value={header}>
-                    {header}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Duration Column
-              <select
-                value={durationColumn}
-                onChange={(e) => setDurationColumn(e.target.value)}
-              >
-                <option value=''>Select...</option>
-                {headers.map((header) => (
-                  <option key={header} value={header}>
-                    {header}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Distance Column
-              <select
-                value={distanceColumn}
-                onChange={(e) => setDistanceColumn(e.target.value)}
-              >
-                <option value=''>None</option>
-                {headers.map((header) => (
-                  <option key={header} value={header}>
-                    {header}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Duration Unit
-              <select
-                value={durationUnit}
-                onChange={(e) =>
-                  setDurationUnit(e.target.value as DurationUnit)
-                }
-              >
-                {DURATION_UNITS.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Distance Unit
-              <select
-                value={distanceUnit}
-                onChange={(e) =>
-                  setDistanceUnit(e.target.value as DistanceUnit)
-                }
-              >
-                {DISTANCE_UNITS.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {unit}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Import Intensity ({intensity}/10)
+              Garmin Auto-Detect (meters for large values)
               <input
-                type='range'
-                min={1}
-                max={10}
-                value={intensity}
-                onChange={(e) => setIntensity(Number(e.target.value))}
+                type='checkbox'
+                checked={autoDetectMetric}
+                onChange={(e) => setAutoDetectMetric(e.target.checked)}
               />
             </label>
-          </div>
+            <div className='import-grid'>
+              <label>
+                Date Column
+                <select
+                  value={dateColumn}
+                  onChange={(e) => setDateColumn(e.target.value)}
+                >
+                  <option value=''>Select...</option>
+                  {headers.map((header) => (
+                    <option key={header} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Sport Column
+                <select
+                  value={sportColumn}
+                  onChange={(e) => setSportColumn(e.target.value)}
+                >
+                  <option value=''>Select...</option>
+                  {headers.map((header) => (
+                    <option key={header} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Duration Column
+                <select
+                  value={durationColumn}
+                  onChange={(e) => setDurationColumn(e.target.value)}
+                >
+                  <option value=''>Select...</option>
+                  {headers.map((header) => (
+                    <option key={header} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Distance Column
+                <select
+                  value={distanceColumn}
+                  onChange={(e) => setDistanceColumn(e.target.value)}
+                >
+                  <option value=''>None</option>
+                  {headers.map((header) => (
+                    <option key={header} value={header}>
+                      {header}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Duration Unit
+                <select
+                  value={durationUnit}
+                  onChange={(e) =>
+                    setDurationUnit(e.target.value as DurationUnit)
+                  }
+                >
+                  {DURATION_UNITS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Bike/Run Distance Unit
+                <select
+                  value={bikeRunDistanceUnit}
+                  onChange={(e) =>
+                    setBikeRunDistanceUnit(e.target.value as DistanceUnit)
+                  }
+                >
+                  {BIKE_RUN_DISTANCE_UNITS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Swim Distance Unit
+                <select
+                  value={swimDistanceUnit}
+                  onChange={(e) =>
+                    setSwimDistanceUnit(e.target.value as SwimDistanceUnit)
+                  }
+                >
+                  {SWIM_DISTANCE_UNITS.map((unit) => (
+                    <option key={unit} value={unit}>
+                      {unit}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Import Intensity ({intensity}/10)
+                <input
+                  type='range'
+                  min={1}
+                  max={10}
+                  value={intensity}
+                  onChange={(e) => setIntensity(Number(e.target.value))}
+                />
+              </label>
+            </div>
+          </>
         )}
 
         {error && <p className='error-text'>{error}</p>}

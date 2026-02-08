@@ -78,7 +78,7 @@ export default function Dashboard() {
         onClearAll={deleteAllWorkouts}
       />
 
-      <LifetimeTotals workouts={workouts} />
+      <LifetimeTotals workouts={workouts} timeFrame={timeFrame} />
     </div>
   );
 }

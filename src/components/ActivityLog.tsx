@@ -79,7 +79,7 @@ export default function ActivityLog({
       )}
       {!hasWorkouts && <p className='muted'>No workouts logged yet.</p>}
       {hasWorkouts && (
-        <div className='table-wrapper'>
+        <div className='table-wrapper activity-log-table'>
           <table>
             <thead>
               <tr>
