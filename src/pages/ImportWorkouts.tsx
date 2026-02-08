@@ -24,9 +24,7 @@ const metersPerYard = 0.9144;
 const guessColumn = (fields: string[], options: string[]) => {
   const lowerFields = fields.map((field) => field.toLowerCase());
   for (const option of options) {
-    const matchIndex = lowerFields.findIndex((field) =>
-      field.includes(option),
-    );
+    const matchIndex = lowerFields.findIndex((field) => field.includes(option));
     if (matchIndex >= 0) return fields[matchIndex];
   }
   return '';
@@ -88,13 +86,26 @@ const convertDistance = (
 const normalizeSport = (value: string) => {
   const label = value.toLowerCase();
   if (label.includes('swim')) return 'Swim';
-  if (label.includes('ride') || label.includes('bike') || label.includes('cycle')) {
+  if (
+    label.includes('ride') ||
+    label.includes('bike') ||
+    label.includes('cycle')
+  ) {
     return 'Bike';
   }
-  if (label.includes('run') || label.includes('walk') || label.includes('hike')) {
+  if (
+    label.includes('run') ||
+    label.includes('walk') ||
+    label.includes('hike')
+  ) {
     return 'Run';
   }
-  if (label.includes('strength') || label.includes('weight') || label.includes('gym') || label.includes('workout')) {
+  if (
+    label.includes('strength') ||
+    label.includes('weight') ||
+    label.includes('gym') ||
+    label.includes('workout')
+  ) {
     return 'Strength';
   }
   return null;
@@ -134,7 +145,9 @@ export default function ImportWorkouts() {
         const sport = normalizeSport(row[sportColumn]);
         if (!date || !sport) return null;
         const duration = parseDurationValue(row[durationColumn], durationUnit);
-        const distanceRaw = distanceColumn ? parseNumber(row[distanceColumn]) : 0;
+        const distanceRaw = distanceColumn
+          ? parseNumber(row[distanceColumn])
+          : 0;
         const distance = convertDistance(distanceRaw, distanceUnit, sport);
         return {
           date,
@@ -176,10 +189,17 @@ export default function ImportWorkouts() {
         const fields = result.meta.fields ?? [];
         setRows(result.data);
         setHeaders(fields);
-        setDateColumn(guessColumn(fields, ['activity date', 'start date', 'date']));
+        setDateColumn(
+          guessColumn(fields, ['activity date', 'start date', 'date']),
+        );
         setSportColumn(guessColumn(fields, ['activity type', 'sport', 'type']));
         setDurationColumn(
-          guessColumn(fields, ['moving time', 'elapsed time', 'duration', 'time']),
+          guessColumn(fields, [
+            'moving time',
+            'elapsed time',
+            'duration',
+            'time',
+          ]),
         );
         setDistanceColumn(guessColumn(fields, ['distance']));
       },
@@ -288,7 +308,9 @@ export default function ImportWorkouts() {
               Duration Unit
               <select
                 value={durationUnit}
-                onChange={(e) => setDurationUnit(e.target.value as DurationUnit)}
+                onChange={(e) =>
+                  setDurationUnit(e.target.value as DurationUnit)
+                }
               >
                 {DURATION_UNITS.map((unit) => (
                   <option key={unit} value={unit}>
@@ -301,7 +323,9 @@ export default function ImportWorkouts() {
               Distance Unit
               <select
                 value={distanceUnit}
-                onChange={(e) => setDistanceUnit(e.target.value as DistanceUnit)}
+                onChange={(e) =>
+                  setDistanceUnit(e.target.value as DistanceUnit)
+                }
               >
                 {DISTANCE_UNITS.map((unit) => (
                   <option key={unit} value={unit}>

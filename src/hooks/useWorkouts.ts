@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   collection,
   addDoc,
@@ -8,10 +8,10 @@ import {
   Timestamp,
   writeBatch,
   doc,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { useAuth } from "./useAuth";
-import type { Workout, Sport } from "../types";
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from './useAuth';
+import type { Workout, Sport } from '../types';
 
 export function useWorkouts() {
   const { user } = useAuth();
@@ -26,8 +26,8 @@ export function useWorkouts() {
     }
 
     const q = query(
-      collection(db, "users", user.uid, "workouts"),
-      orderBy("date", "desc")
+      collection(db, 'users', user.uid, 'workouts'),
+      orderBy('date', 'desc'),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -51,7 +51,7 @@ export function useWorkouts() {
   }) => {
     if (!user) return;
     const load = workout.duration * workout.intensity;
-    await addDoc(collection(db, "users", user.uid, "workouts"), {
+    await addDoc(collection(db, 'users', user.uid, 'workouts'), {
       date: Timestamp.fromDate(workout.date),
       sport: workout.sport,
       duration: workout.duration,
@@ -68,10 +68,10 @@ export function useWorkouts() {
       duration: number;
       distance: number;
       intensity?: number;
-    }>
+    }>,
   ) => {
     if (!user || workoutsToAdd.length === 0) return;
-    const ref = collection(db, "users", user.uid, "workouts");
+    const ref = collection(db, 'users', user.uid, 'workouts');
     const chunkSize = 450;
 
     for (let i = 0; i < workoutsToAdd.length; i += chunkSize) {
