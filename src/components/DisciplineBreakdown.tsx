@@ -14,6 +14,14 @@ interface Props {
   timeFrame: string;
 }
 
+const renderLabel = ({
+  name,
+  percent,
+}: {
+  name: string;
+  percent: number;
+}) => `${name} ${Math.round(percent * 100)}%`;
+
 export default function DisciplineBreakdown({ workouts, timeFrame }: Props) {
   const data = useMemo(() => {
     const totals: Record<string, number> = {};
@@ -37,13 +45,15 @@ export default function DisciplineBreakdown({ workouts, timeFrame }: Props) {
             innerRadius={60}
             outerRadius={100}
             paddingAngle={2}
+            label={renderLabel}
           >
             {data.map((entry) => (
               <Cell key={entry.name} fill={COLORS[entry.name] || "#888"} />
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{ background: "#1e1e2e", border: "1px solid #333" }}
+            contentStyle={{ background: "#1e1e2e", border: "1px solid #333", color: "#e0e0e0" }}
+            itemStyle={{ color: "#e0e0e0" }}
             formatter={(value) => `${Math.round(value as number)} min`}
           />
           <Legend />
