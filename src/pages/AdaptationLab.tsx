@@ -5,7 +5,7 @@ import StatusTable from "../components/StatusTable";
 import TrendCharts from "../components/TrendCharts";
 
 export default function AdaptationLab() {
-  const { sessions, loading } = useAdaptation();
+  const { sessions, loading, deleteSession } = useAdaptation();
 
   if (loading) {
     return <p>Loading sessions...</p>;
@@ -20,7 +20,7 @@ export default function AdaptationLab() {
       {sessions.length > 0 && (
         <>
           <WeeklyReport sessions={sessions} />
-          <StatusTable sessions={sessions} />
+          <StatusTable sessions={sessions} onDelete={deleteSession} />
           <TrendCharts sessions={sessions} />
         </>
       )}

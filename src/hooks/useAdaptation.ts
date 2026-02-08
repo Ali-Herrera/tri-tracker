@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import {
   collection,
   addDoc,
+  deleteDoc,
+  doc,
   onSnapshot,
   query,
   orderBy,
@@ -57,5 +59,10 @@ export function useAdaptation() {
     });
   };
 
-  return { sessions, loading, addSession };
+  const deleteSession = async (id: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, "users", user.uid, "adaptations", id));
+  };
+
+  return { sessions, loading, addSession, deleteSession };
 }

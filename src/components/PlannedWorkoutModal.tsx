@@ -407,7 +407,7 @@ export default function PlannedWorkoutModal({
                         Decoupling / Drift (%)
                         <input
                           type='number'
-                          min={0}
+                          min={-100}
                           max={100}
                           step={0.1}
                           value={drift}

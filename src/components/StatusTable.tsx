@@ -3,6 +3,7 @@ import type { AdaptationSession } from "../types";
 
 interface Props {
   sessions: AdaptationSession[];
+  onDelete?: (id: string) => void;
 }
 
 function getStatus(decoupling: number): { label: string; className: string } {
@@ -11,7 +12,7 @@ function getStatus(decoupling: number): { label: string; className: string } {
   return { label: "High Fatigue", className: "status-red" };
 }
 
-export default function StatusTable({ sessions }: Props) {
+export default function StatusTable({ sessions, onDelete }: Props) {
   if (sessions.length === 0) return <p className="muted">No sessions logged yet.</p>;
 
   return (
@@ -27,6 +28,7 @@ export default function StatusTable({ sessions }: Props) {
               <th>EF</th>
               <th>Decoupling</th>
               <th>Status</th>
+              {onDelete && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -40,6 +42,17 @@ export default function StatusTable({ sessions }: Props) {
                   <td>{s.ef.toFixed(4)}</td>
                   <td>{s.decoupling.toFixed(1)}%</td>
                   <td><span className={`status-badge ${status.className}`}>{status.label}</span></td>
+                  {onDelete && (
+                    <td>
+                      <button
+                        type="button"
+                        className="filter-btn"
+                        onClick={() => onDelete(s.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}
