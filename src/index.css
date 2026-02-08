@@ -623,6 +623,7 @@ body {
 }
 
 .activity-log-table {
+  display: block;
   max-height: 480px;
   overflow-y: auto;
 }
@@ -769,7 +770,10 @@ th {
   color: var(--text-muted);
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .filter-btn:hover {
@@ -1213,6 +1217,9 @@ section {
   }
 
   .sidebar {
+    .activity-log-table {
+      max-height: 320px;
+    }
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
