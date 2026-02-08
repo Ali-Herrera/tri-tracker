@@ -125,6 +125,7 @@ export default function ImportWorkouts() {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('');
   const [importing, setImporting] = useState(false);
+  const [fileInputKey, setFileInputKey] = useState(0);
 
   const [dateColumn, setDateColumn] = useState('');
   const [sportColumn, setSportColumn] = useState('');
@@ -230,6 +231,19 @@ export default function ImportWorkouts() {
     }
   };
 
+  const handleClear = () => {
+    setRows([]);
+    setHeaders([]);
+    setDateColumn('');
+    setSportColumn('');
+    setDurationColumn('');
+    setDistanceColumn('');
+    setError('');
+    setStatus('');
+    setImporting(false);
+    setFileInputKey((prev) => prev + 1);
+  };
+
   return (
     <div className='dashboard'>
       <div className='page-header'>
@@ -241,6 +255,7 @@ export default function ImportWorkouts() {
         <label>
           File
           <input
+            key={fileInputKey}
             type='file'
             accept='.csv,text/csv'
             onChange={(e) => handleFile(e.target.files?.[0])}
@@ -355,13 +370,21 @@ export default function ImportWorkouts() {
           <div className='import-actions'>
             <button
               type='button'
-              className='filter-btn'
+              className='filter-btn btn-primary'
               onClick={handleImport}
               disabled={importing}
             >
               {importing
                 ? 'Importing...'
                 : `Import ${preview.workouts.length} Workouts`}
+            </button>
+            <button
+              type='button'
+              className='filter-btn'
+              onClick={handleClear}
+              disabled={importing}
+            >
+              Clear Import
             </button>
             <span className='muted'>Skipped: {preview.skipped}</span>
           </div>

@@ -8,6 +8,7 @@ import {
   Timestamp,
   writeBatch,
   doc,
+  getDocs,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './useAuth';
@@ -96,5 +97,21 @@ export function useWorkouts() {
     }
   };
 
-  return { workouts, loading, addWorkout, addWorkoutsBatch };
+  const deleteAllWorkouts = async () => {
+    if (!user) return;
+    const ref = collection(db, 'users', user.uid, 'workouts');
+    const snapshot = await getDocs(ref);
+    if (snapshot.empty) return;
+    const chunkSize = 450;
+    for (let i = 0; i < snapshot.docs.length; i += chunkSize) {
+      const batch = writeBatch(db);
+      const chunk = snapshot.docs.slice(i, i + chunkSize);
+      for (const docSnap of chunk) {
+        batch.delete(docSnap.ref);
+      }
+      await batch.commit();
+    }
+  };
+
+  return { workouts, loading, addWorkout, addWorkoutsBatch, deleteAllWorkouts };
 }

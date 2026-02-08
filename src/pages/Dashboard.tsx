@@ -1,32 +1,37 @@
-import { useMemo, useState } from "react";
-import { subDays } from "date-fns";
-import { useWorkouts } from "../hooks/useWorkouts";
-import type { TimeFrame } from "../types";
-import WorkoutForm from "../components/WorkoutForm";
-import RaceCountdown from "../components/RaceCountdown";
-import CoachAnalysis from "../components/CoachAnalysis";
-import SeasonTotals from "../components/SeasonTotals";
-import WeeklyVolumeChart from "../components/WeeklyVolumeChart";
-import DisciplineBreakdown from "../components/DisciplineBreakdown";
-import ActivityLog from "../components/ActivityLog";
-import LifetimeTotals from "../components/LifetimeTotals";
+import { useMemo, useState } from 'react';
+import { subDays } from 'date-fns';
+import { useWorkouts } from '../hooks/useWorkouts';
+import type { TimeFrame } from '../types';
+import WorkoutForm from '../components/WorkoutForm';
+import RaceCountdown from '../components/RaceCountdown';
+import CoachAnalysis from '../components/CoachAnalysis';
+import SeasonTotals from '../components/SeasonTotals';
+import WeeklyVolumeChart from '../components/WeeklyVolumeChart';
+import DisciplineBreakdown from '../components/DisciplineBreakdown';
+import ActivityLog from '../components/ActivityLog';
+import LifetimeTotals from '../components/LifetimeTotals';
 
-const TIME_FRAMES: TimeFrame[] = ["All Time", "Year to Date", "Last 90 Days", "Last 30 Days"];
+const TIME_FRAMES: TimeFrame[] = [
+  'All Time',
+  'Year to Date',
+  'Last 90 Days',
+  'Last 30 Days',
+];
 
 export default function Dashboard() {
-  const { workouts, loading } = useWorkouts();
-  const [timeFrame, setTimeFrame] = useState<TimeFrame>("All Time");
+  const { workouts, loading, deleteAllWorkouts } = useWorkouts();
+  const [timeFrame, setTimeFrame] = useState<TimeFrame>('All Time');
 
   const filtered = useMemo(() => {
     const now = new Date();
     return workouts.filter((w) => {
       const d = w.date.toDate();
       switch (timeFrame) {
-        case "Year to Date":
+        case 'Year to Date':
           return d.getFullYear() === now.getFullYear();
-        case "Last 90 Days":
+        case 'Last 90 Days':
           return d >= subDays(now, 90);
-        case "Last 30 Days":
+        case 'Last 30 Days':
           return d >= subDays(now, 30);
         default:
           return true;
@@ -39,16 +44,18 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
-      <div className="page-header">
+    <div className='dashboard'>
+      <div className='page-header'>
         <h1>My Training Dashboard</h1>
         <select
           value={timeFrame}
           onChange={(e) => setTimeFrame(e.target.value as TimeFrame)}
-          className="time-frame-select"
+          className='time-frame-select'
         >
           {TIME_FRAMES.map((tf) => (
-            <option key={tf} value={tf}>{tf}</option>
+            <option key={tf} value={tf}>
+              {tf}
+            </option>
           ))}
         </select>
       </div>
@@ -65,7 +72,11 @@ export default function Dashboard() {
 
       <DisciplineBreakdown workouts={filtered} timeFrame={timeFrame} />
 
-      <ActivityLog workouts={filtered} timeFrame={timeFrame} />
+      <ActivityLog
+        workouts={filtered}
+        timeFrame={timeFrame}
+        onClearAll={deleteAllWorkouts}
+      />
 
       <LifetimeTotals workouts={workouts} />
     </div>

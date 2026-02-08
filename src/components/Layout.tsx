@@ -37,6 +37,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to='/import' onClick={() => setSidebarOpen(false)}>
             Import
           </NavLink>
+          <NavLink to='/references' onClick={() => setSidebarOpen(false)}>
+            References
+          </NavLink>
         </nav>
 
         <div className='sidebar-footer'>
