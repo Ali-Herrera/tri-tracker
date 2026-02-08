@@ -56,3 +56,13 @@ export interface PlannedWorkout {
   hardMinutes: number;
   completed?: boolean;
 }
+
+export interface PublicProfile {
+  uid: string;
+  email?: string;
+  displayName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  goals?: string;
+  updatedAt?: Timestamp;
+}
