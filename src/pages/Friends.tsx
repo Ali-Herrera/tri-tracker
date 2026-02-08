@@ -28,6 +28,7 @@ export default function Friends() {
   const [bio, setBio] = useState('');
   const [goals, setGoals] = useState('');
   const [saving, setSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState('');
 
   const [email, setEmail] = useState('');
   const [requestError, setRequestError] = useState('');
@@ -47,9 +48,31 @@ export default function Friends() {
     if (!profile) return;
     setDisplayName(profile.displayName ?? '');
     setAvatarUrl(profile.avatarUrl ?? '');
+    setAvatarPreview(profile.avatarUrl ?? '');
     setBio(profile.bio ?? '');
     setGoals(profile.goals ?? '');
   }, [profile]);
+
+  const handleAvatarFile = (file?: File) => {
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      const size = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d')!;
+      // Crop to center square
+      const min = Math.min(img.width, img.height);
+      const sx = (img.width - min) / 2;
+      const sy = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      setAvatarUrl(dataUrl);
+      setAvatarPreview(dataUrl);
+    };
+    img.src = URL.createObjectURL(file);
+  };
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
@@ -103,13 +126,26 @@ export default function Friends() {
           />
         </label>
         <label>
-          Avatar URL
-          <input
-            type='url'
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.target.value)}
-            placeholder='https://...'
-          />
+          Avatar
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {avatarPreview && (
+              <img
+                src={avatarPreview}
+                alt='Avatar preview'
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  objectFit: 'cover',
+                }}
+              />
+            )}
+            <input
+              type='file'
+              accept='image/*'
+              onChange={(e) => handleAvatarFile(e.target.files?.[0])}
+            />
+          </div>
         </label>
         <label>
           Bio
