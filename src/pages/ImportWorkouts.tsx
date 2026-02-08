@@ -154,6 +154,8 @@ const normalizeSport = (value: string) => {
   return null;
 };
 
+const ALL_SPORTS: Sport[] = ['Swim', 'Bike', 'Run', 'Strength'];
+
 const parseDate = (value: string) => {
   if (!value) return null;
   const date = new Date(value);
@@ -180,23 +182,21 @@ export default function ImportWorkouts() {
   const [swimDistanceUnit, setSwimDistanceUnit] =
     useState<SwimDistanceUnit>('yards');
   const [autoDetectMetric, setAutoDetectMetric] = useState(true);
-  const [defaultSport, setDefaultSport] = useState<Sport | ''>('');
   const [intensity, setIntensity] = useState(5);
 
+  const isFixedSport = ALL_SPORTS.includes(sportColumn as Sport);
+
   const preview = useMemo(() => {
-    if (!rows.length || !dateColumn || !durationColumn) {
-      return { workouts: [], skipped: rows.length };
-    }
-    if (!sportColumn && !defaultSport) {
+    if (!rows.length || !dateColumn || !sportColumn || !durationColumn) {
       return { workouts: [], skipped: rows.length };
     }
 
     const workouts = rows
       .map((row) => {
         const date = parseDate(row[dateColumn]);
-        const sport = sportColumn
-          ? normalizeSport(row[sportColumn]) || defaultSport || null
-          : defaultSport || null;
+        const sport = isFixedSport
+          ? (sportColumn as Sport)
+          : normalizeSport(row[sportColumn]);
         if (!date || !sport) return null;
         const duration = parseDurationValue(row[durationColumn], durationUnit);
         const distanceRaw = distanceColumn
@@ -236,7 +236,7 @@ export default function ImportWorkouts() {
     bikeRunDistanceUnit,
     swimDistanceUnit,
     autoDetectMetric,
-    defaultSport,
+    isFixedSport,
     intensity,
   ]);
 
@@ -395,32 +395,18 @@ export default function ImportWorkouts() {
                   value={sportColumn}
                   onChange={(e) => setSportColumn(e.target.value)}
                 >
-                  <option value=''>None</option>
+                  <option value=''>Select...</option>
                   {headers.map((header) => (
                     <option key={header} value={header}>
                       {header}
                     </option>
                   ))}
-                </select>
-              </label>
-              <label>
-                Default Sport{!sportColumn && ' (required)'}
-                <select
-                  value={defaultSport}
-                  onChange={(e) =>
-                    setDefaultSport(e.target.value as Sport | '')
-                  }
-                >
-                  <option value=''>
-                    {sportColumn ? 'None (use column)' : 'Select...'}
-                  </option>
-                  {(['Swim', 'Bike', 'Run', 'Strength'] as Sport[]).map(
-                    (sport) => (
-                      <option key={sport} value={sport}>
-                        {sport}
-                      </option>
-                    ),
-                  )}
+                  <option disabled>───────────</option>
+                  {ALL_SPORTS.map((sport) => (
+                    <option key={sport} value={sport}>
+                      All {sport}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label>
