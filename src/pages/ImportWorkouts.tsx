@@ -180,17 +180,23 @@ export default function ImportWorkouts() {
   const [swimDistanceUnit, setSwimDistanceUnit] =
     useState<SwimDistanceUnit>('yards');
   const [autoDetectMetric, setAutoDetectMetric] = useState(true);
+  const [defaultSport, setDefaultSport] = useState<Sport | ''>('');
   const [intensity, setIntensity] = useState(5);
 
   const preview = useMemo(() => {
-    if (!rows.length || !dateColumn || !sportColumn || !durationColumn) {
+    if (!rows.length || !dateColumn || !durationColumn) {
+      return { workouts: [], skipped: rows.length };
+    }
+    if (!sportColumn && !defaultSport) {
       return { workouts: [], skipped: rows.length };
     }
 
     const workouts = rows
       .map((row) => {
         const date = parseDate(row[dateColumn]);
-        const sport = normalizeSport(row[sportColumn]);
+        const sport = sportColumn
+          ? normalizeSport(row[sportColumn]) || defaultSport || null
+          : defaultSport || null;
         if (!date || !sport) return null;
         const duration = parseDurationValue(row[durationColumn], durationUnit);
         const distanceRaw = distanceColumn
@@ -230,6 +236,7 @@ export default function ImportWorkouts() {
     bikeRunDistanceUnit,
     swimDistanceUnit,
     autoDetectMetric,
+    defaultSport,
     intensity,
   ]);
 
@@ -388,12 +395,32 @@ export default function ImportWorkouts() {
                   value={sportColumn}
                   onChange={(e) => setSportColumn(e.target.value)}
                 >
-                  <option value=''>Select...</option>
+                  <option value=''>None</option>
                   {headers.map((header) => (
                     <option key={header} value={header}>
                       {header}
                     </option>
                   ))}
+                </select>
+              </label>
+              <label>
+                Default Sport{!sportColumn && ' (required)'}
+                <select
+                  value={defaultSport}
+                  onChange={(e) =>
+                    setDefaultSport(e.target.value as Sport | '')
+                  }
+                >
+                  <option value=''>
+                    {sportColumn ? 'None (use column)' : 'Select...'}
+                  </option>
+                  {(['Swim', 'Bike', 'Run', 'Strength'] as Sport[]).map(
+                    (sport) => (
+                      <option key={sport} value={sport}>
+                        {sport}
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
               <label>
