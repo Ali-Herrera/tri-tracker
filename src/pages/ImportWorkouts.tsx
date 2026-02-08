@@ -42,16 +42,18 @@ const guessColumn = (fields: string[], options: string[]) => {
 const parseNumber = (value: string) => {
   if (!value) return 0;
   let cleaned = value.trim();
-  // Handle European comma-decimal format: "5,02" or "1.234,56"
-  // If there's a comma but no dot after it, treat comma as decimal separator
   if (cleaned.includes(',')) {
     const lastComma = cleaned.lastIndexOf(',');
     const lastDot = cleaned.lastIndexOf('.');
-    if (lastComma > lastDot) {
-      // Comma is the decimal separator (e.g., "1.234,56" or "5,02")
+    const afterComma = cleaned.slice(lastComma + 1);
+    if (lastComma > lastDot && /^\d{3}$/.test(afterComma)) {
+      // Exactly 3 digits after comma = thousands separator: "4,000" or "1,234,567"
+      cleaned = cleaned.replace(/,/g, '');
+    } else if (lastComma > lastDot) {
+      // European decimal separator: "5,02" or "1.234,56"
       cleaned = cleaned.replace(/\./g, '').replace(',', '.');
     } else {
-      // Comma is thousands separator (e.g., "1,234.56")
+      // Comma before dot = thousands separator: "1,234.56"
       cleaned = cleaned.replace(/,/g, '');
     }
   }
@@ -202,9 +204,15 @@ export default function ImportWorkouts() {
         const distanceRaw = distanceColumn
           ? parseNumber(row[distanceColumn])
           : 0;
+        // Garmin uses meters for track workouts but miles for everything else
+        const rawSportValue = !isFixedSport && sportColumn ? row[sportColumn] : '';
+        const isTrackActivity = rawSportValue.toLowerCase().includes('track');
+        const rowDistanceUnit: DistanceUnit = isTrackActivity
+          ? 'meters'
+          : bikeRunDistanceUnit;
         const distance = convertDistance(
           distanceRaw,
-          bikeRunDistanceUnit,
+          rowDistanceUnit,
           swimDistanceUnit,
           sport,
           autoDetectMetric,
