@@ -18,9 +18,9 @@ const renderLabel = ({
   name,
   percent,
 }: {
-  name: string;
-  percent: number;
-}) => `${name} ${Math.round(percent * 100)}%`;
+  name?: string;
+  percent?: number;
+}) => `${name ?? ''} ${Math.round((percent ?? 0) * 100)}%`;
 
 export default function DisciplineBreakdown({ workouts, timeFrame }: Props) {
   const data = useMemo(() => {
