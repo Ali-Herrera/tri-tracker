@@ -58,6 +58,8 @@ export default function References() {
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [templates, setTemplates] = useState<TemplateWorkout[]>([]);
 
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+
   const [newTemplate, setNewTemplate] = useState<Omit<TemplateWorkout, 'id'>>({
     sport: 'Swim',
     title: '',
@@ -209,6 +211,14 @@ export default function References() {
       easyMinutes: template.easyMinutes,
       hardMinutes: template.hardMinutes,
     });
+    setAddedIds((prev) => new Set(prev).add(template.id));
+    setTimeout(() => {
+      setAddedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(template.id);
+        return next;
+      });
+    }, 1500);
   };
 
   const handleAddTemplate = async () => {
@@ -579,10 +589,10 @@ export default function References() {
                 <div className='ref-template-actions'>
                   <button
                     type='button'
-                    className='filter-btn'
+                    className={`filter-btn ${addedIds.has(template.id) ? 'filter-btn-success' : ''}`}
                     onClick={() => handleCopyTemplate(template)}
                   >
-                    Add to Calendar
+                    {addedIds.has(template.id) ? 'Added!' : 'Add to Calendar'}
                   </button>
                   <button
                     type='button'

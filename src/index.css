@@ -506,6 +506,24 @@ body {
   background: var(--bg-input);
 }
 
+.ref-template-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ref-template-form input,
+.ref-template-form select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
 .ref-template-actions {
   margin-top: auto;
 }
@@ -749,12 +767,38 @@ th {
   color: var(--text-muted);
   cursor: pointer;
   font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.filter-btn:hover {
+  background: var(--bg-input);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.filter-btn:active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
 }
 
 .filter-btn.active {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
+}
+
+.filter-btn-success {
+  background: rgba(0, 204, 150, 0.15);
+  border-color: var(--green);
+  color: var(--green);
+  pointer-events: none;
+}
+
+.filter-btn-success:hover {
+  background: rgba(0, 204, 150, 0.15);
+  border-color: var(--green);
+  color: var(--green);
 }
 
 /* === MISC === */
