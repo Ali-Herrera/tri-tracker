@@ -38,10 +38,15 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
       entry[w.sport] = (entry[w.sport] || 0) + w.duration / 60;
     }
 
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+
     const rows = Array.from(weekMap.entries()).map(([week, sports]) => ({
       week,
-      ...sports,
-      total: sports.Swim + sports.Bike + sports.Run + sports.Strength,
+      Swim: round2(sports.Swim),
+      Bike: round2(sports.Bike),
+      Run: round2(sports.Run),
+      Strength: round2(sports.Strength),
+      total: round2(sports.Swim + sports.Bike + sports.Run + sports.Strength),
       trend: 0,
     }));
 
@@ -49,7 +54,7 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
     for (let i = 0; i < rows.length; i++) {
       const start = Math.max(0, i - 3);
       const slice = rows.slice(start, i + 1);
-      rows[i].trend = slice.reduce((s, r) => s + r.total, 0) / slice.length;
+      rows[i].trend = round2(slice.reduce((s, r) => s + r.total, 0) / slice.length);
     }
 
     return rows;
@@ -65,8 +70,10 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
           <XAxis dataKey="week" tick={{ fill: "#aaa", fontSize: 12 }} />
           <YAxis tick={{ fill: "#aaa", fontSize: 12 }} label={{ value: "Hours", angle: -90, position: "insideLeft", fill: "#aaa" }} />
           <Tooltip
-            contentStyle={{ background: "#1e1e2e", border: "1px solid #333" }}
+            contentStyle={{ background: "#1e1e2e", border: "1px solid #333", color: "#e0e0e0" }}
+            itemStyle={{ color: "#e0e0e0" }}
             labelStyle={{ color: "#fff" }}
+            formatter={(value) => `${value} hrs`}
           />
           <Legend />
           <Bar dataKey="Swim" stackId="a" fill={COLORS.Swim} />
