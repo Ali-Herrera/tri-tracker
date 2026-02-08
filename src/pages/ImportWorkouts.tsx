@@ -89,7 +89,10 @@ const normalizeSport = (value: string) => {
   if (
     label.includes('ride') ||
     label.includes('bike') ||
-    label.includes('cycle')
+    label.includes('cycle') ||
+    label.includes('cycling') ||
+    label.includes('trainer') ||
+    label.includes('spin')
   ) {
     return 'Bike';
   }
@@ -104,7 +107,10 @@ const normalizeSport = (value: string) => {
     label.includes('strength') ||
     label.includes('weight') ||
     label.includes('gym') ||
-    label.includes('workout')
+    label.includes('workout') ||
+    label.includes('yoga') ||
+    label.includes('boulder') ||
+    label.includes('climb')
   ) {
     return 'Strength';
   }
