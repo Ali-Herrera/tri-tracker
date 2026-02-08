@@ -172,7 +172,7 @@ export default function ImportWorkouts() {
     Papa.parse<CsvRow>(file, {
       header: true,
       skipEmptyLines: true,
-      complete: (result) => {
+      complete: (result: Papa.ParseResult<CsvRow>) => {
         const fields = result.meta.fields ?? [];
         setRows(result.data);
         setHeaders(fields);
@@ -183,7 +183,7 @@ export default function ImportWorkouts() {
         );
         setDistanceColumn(guessColumn(fields, ['distance']));
       },
-      error: (err) => {
+      error: (err: Papa.ParseError) => {
         setError(err.message);
       },
     });
