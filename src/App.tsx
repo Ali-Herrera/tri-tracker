@@ -7,6 +7,7 @@ import Calendar from './pages/Calendar';
 import AdaptationLab from './pages/AdaptationLab';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
+import ImportWorkouts from './pages/ImportWorkouts';
 
 export default function App() {
   const auth = useAuthProvider();
@@ -33,6 +34,7 @@ export default function App() {
             <Route path='/adaptation' element={<AdaptationLab />} />
             <Route path='/friends' element={<Friends />} />
             <Route path='/friends/:uid' element={<FriendProfile />} />
+            <Route path='/import' element={<ImportWorkouts />} />
           </Routes>
         </Layout>
       </BrowserRouter>

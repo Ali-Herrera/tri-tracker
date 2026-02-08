@@ -34,6 +34,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to='/friends' onClick={() => setSidebarOpen(false)}>
             Friends
           </NavLink>
+          <NavLink to='/import' onClick={() => setSidebarOpen(false)}>
+            Import
+          </NavLink>
         </nav>
 
         <div className='sidebar-footer'>

@@ -327,6 +327,24 @@ body {
   border-radius: var(--radius);
 }
 
+/* === IMPORT === */
+.import-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.import-preview {
+  max-height: 280px;
+}
+
 .page-header {
   display: flex;
   align-items: center;

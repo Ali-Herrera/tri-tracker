@@ -6,6 +6,8 @@ import {
   query,
   orderBy,
   Timestamp,
+  writeBatch,
+  doc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "./useAuth";
@@ -59,5 +61,40 @@ export function useWorkouts() {
     });
   };
 
-  return { workouts, loading, addWorkout };
+  const addWorkoutsBatch = async (
+    workoutsToAdd: Array<{
+      date: Date;
+      sport: Sport;
+      duration: number;
+      distance: number;
+      intensity?: number;
+    }>
+  ) => {
+    if (!user || workoutsToAdd.length === 0) return;
+    const ref = collection(db, "users", user.uid, "workouts");
+    const chunkSize = 450;
+
+    for (let i = 0; i < workoutsToAdd.length; i += chunkSize) {
+      const batch = writeBatch(db);
+      const chunk = workoutsToAdd.slice(i, i + chunkSize);
+
+      for (const workout of chunk) {
+        const intensity = workout.intensity ?? 5;
+        const load = workout.duration * intensity;
+        const docRef = doc(ref);
+        batch.set(docRef, {
+          date: Timestamp.fromDate(workout.date),
+          sport: workout.sport,
+          duration: workout.duration,
+          distance: workout.distance,
+          intensity,
+          load,
+        });
+      }
+
+      await batch.commit();
+    }
+  };
+
+  return { workouts, loading, addWorkout, addWorkoutsBatch };
 }
