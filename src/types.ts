@@ -54,6 +54,7 @@ export interface PlannedWorkout {
   notes: string;
   easyMinutes: number;
   hardMinutes: number;
+  order?: number;
   completed?: boolean;
   workoutDocId?: string;
   adaptationDocId?: string;

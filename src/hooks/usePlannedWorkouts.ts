@@ -10,6 +10,7 @@ import {
   where,
   orderBy,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './useAuth';
@@ -31,6 +32,31 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
   const { user } = useAuth();
   const [workouts, setWorkouts] = useState<PlannedWorkout[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const buildPlannedPayload = (workout: Omit<PlannedWorkout, 'id'>) => {
+    const payload: Omit<PlannedWorkout, 'id'> = {
+      date: workout.date,
+      sport: workout.sport,
+      title: workout.title,
+      notes: workout.notes,
+      easyMinutes: workout.easyMinutes,
+      hardMinutes: workout.hardMinutes,
+      order: workout.order,
+      completed: workout.completed,
+      workoutDocId: workout.workoutDocId,
+      adaptationDocId: workout.adaptationDocId,
+      completedDistance: workout.completedDistance,
+      completedAdaptation: workout.completedAdaptation,
+    };
+
+    Object.keys(payload).forEach((key) => {
+      if (payload[key as keyof typeof payload] === undefined) {
+        delete payload[key as keyof typeof payload];
+      }
+    });
+
+    return payload;
+  };
 
   useEffect(() => {
     if (!user) {
@@ -60,14 +86,10 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
   const addPlannedWorkout = async (workout: Omit<PlannedWorkout, 'id'>) => {
     if (!user) return;
-    await addDoc(collection(db, 'users', user.uid, 'plannedWorkouts'), {
-      date: workout.date,
-      sport: workout.sport,
-      title: workout.title,
-      notes: workout.notes,
-      easyMinutes: workout.easyMinutes,
-      hardMinutes: workout.hardMinutes,
-    });
+    await addDoc(
+      collection(db, 'users', user.uid, 'plannedWorkouts'),
+      buildPlannedPayload(workout),
+    );
   };
 
   const updatePlannedWorkout = async (
@@ -87,14 +109,26 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
   const copyPlannedWorkout = async (workout: PlannedWorkout) => {
     if (!user) return;
-    await addDoc(collection(db, 'users', user.uid, 'plannedWorkouts'), {
-      date: workout.date,
-      sport: workout.sport,
-      title: workout.title,
-      notes: workout.notes,
-      easyMinutes: workout.easyMinutes,
-      hardMinutes: workout.hardMinutes,
-    });
+    const { id, ...copy } = workout;
+    await addDoc(
+      collection(db, 'users', user.uid, 'plannedWorkouts'),
+      buildPlannedPayload(copy),
+    );
+  };
+
+  const updatePlannedWorkouts = async (
+    updates: Array<{
+      id: string;
+      updates: Partial<Omit<PlannedWorkout, 'id'>>;
+    }>,
+  ) => {
+    if (!user || updates.length === 0) return;
+    const batch = writeBatch(db);
+    for (const { id, updates: patch } of updates) {
+      const ref = doc(db, 'users', user.uid, 'plannedWorkouts', id);
+      batch.update(ref, patch);
+    }
+    await batch.commit();
   };
 
   const buildWorkoutData = (workout: PlannedWorkout, distance: number) => {
@@ -128,8 +162,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     } else {
       work = adaptation.swimSpeed ?? 0;
     }
-    const ef =
-      adaptation.avgHr > 0 ? +(work / adaptation.avgHr).toFixed(4) : 0;
+    const ef = adaptation.avgHr > 0 ? +(work / adaptation.avgHr).toFixed(4) : 0;
     return {
       date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
       discipline: adaptation.discipline,
@@ -227,6 +260,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     loading,
     addPlannedWorkout,
     updatePlannedWorkout,
+    updatePlannedWorkouts,
     deletePlannedWorkout,
     copyPlannedWorkout,
     completePlannedWorkout,

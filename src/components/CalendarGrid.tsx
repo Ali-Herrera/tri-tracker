@@ -9,7 +9,7 @@ import {
   isSameMonth,
   isToday,
 } from 'date-fns';
-import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { useDroppable, useDraggable, useDndContext } from '@dnd-kit/core';
 import type { PlannedWorkout } from '../types';
 
 const SPORT_COLORS: Record<string, string> = {
@@ -20,20 +20,56 @@ const SPORT_COLORS: Record<string, string> = {
   Other: 'var(--text-muted)',
 };
 
+const sortWorkouts = (a: PlannedWorkout, b: PlannedWorkout) => {
+  const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+  const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+  if (orderA !== orderB) return orderA - orderB;
+  return a.title.localeCompare(b.title);
+};
+
 /* ---------- Draggable workout card ---------- */
 
 function DraggableWorkoutCard({
   workout,
   onClick,
+  disableClick,
 }: {
   workout: PlannedWorkout;
   onClick: () => void;
+  disableClick?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      id: workout.id,
-      data: workout,
-    });
+  const { active } = useDndContext();
+  const dragId = `drag-${workout.id}`;
+  const dropId = `drop-${workout.id}`;
+  const isActiveDrag = active?.id === dragId;
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setDragRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id: dragId,
+    data: {
+      type: 'workout',
+      workoutId: workout.id,
+      date: workout.date,
+    },
+  });
+  const { setNodeRef: setDropRef } = useDroppable({
+    id: dropId,
+    data: {
+      type: 'workout',
+      workoutId: workout.id,
+      date: workout.date,
+    },
+    disabled: isActiveDrag,
+  });
+
+  const setNodeRef = (node: HTMLDivElement | null) => {
+    setDragRef(node);
+    setDropRef(node);
+  };
 
   const style: React.CSSProperties = {
     borderLeftColor: SPORT_COLORS[workout.sport] || 'var(--border)',
@@ -54,6 +90,7 @@ function DraggableWorkoutCard({
       style={style}
       onClick={(e) => {
         e.stopPropagation();
+        if (disableClick) return;
         onClick();
       }}
       {...listeners}
@@ -78,6 +115,7 @@ function DroppableDay({
   workouts,
   onDayClick,
   onWorkoutClick,
+  disableClick,
 }: {
   dateStr: string;
   day: Date;
@@ -85,8 +123,12 @@ function DroppableDay({
   workouts: PlannedWorkout[];
   onDayClick: (date: string) => void;
   onWorkoutClick: (workout: PlannedWorkout) => void;
+  disableClick?: boolean;
 }) {
-  const { isOver, setNodeRef } = useDroppable({ id: dateStr });
+  const { isOver, setNodeRef } = useDroppable({
+    id: `day-${dateStr}`,
+    data: { type: 'day', date: dateStr },
+  });
 
   return (
     <div
@@ -99,7 +141,10 @@ function DroppableDay({
       ]
         .filter(Boolean)
         .join(' ')}
-      onClick={() => onDayClick(dateStr)}
+      onClick={() => {
+        if (disableClick) return;
+        onDayClick(dateStr);
+      }}
     >
       <span className='cal-day-number'>{format(day, 'd')}</span>
       <div className='cal-day-workouts'>
@@ -108,6 +153,7 @@ function DroppableDay({
             key={w.id}
             workout={w}
             onClick={() => onWorkoutClick(w)}
+            disableClick={disableClick}
           />
         ))}
       </div>
@@ -151,6 +197,7 @@ interface CalendarGridProps {
   workouts: PlannedWorkout[];
   onDayClick: (date: string) => void;
   onWorkoutClick: (workout: PlannedWorkout) => void;
+  isDragging?: boolean;
 }
 
 export default function CalendarGrid({
@@ -159,6 +206,7 @@ export default function CalendarGrid({
   workouts,
   onDayClick,
   onWorkoutClick,
+  isDragging,
 }: CalendarGridProps) {
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, PlannedWorkout[]>();
@@ -166,6 +214,9 @@ export default function CalendarGrid({
       const existing = map.get(w.date) || [];
       existing.push(w);
       map.set(w.date, existing);
+    }
+    for (const [date, list] of map.entries()) {
+      map.set(date, [...list].sort(sortWorkouts));
     }
     return map;
   }, [workouts]);
@@ -224,6 +275,7 @@ export default function CalendarGrid({
                     workouts={workoutsByDate.get(ds) || []}
                     onDayClick={onDayClick}
                     onWorkoutClick={onWorkoutClick}
+                    disableClick={isDragging}
                   />
                 );
               })}
