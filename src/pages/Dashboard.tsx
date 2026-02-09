@@ -78,9 +78,9 @@ export default function Dashboard() {
 
       <RaceCountdown />
 
-      <WorkoutForm />
-
       <CoachAnalysis workouts={filtered} />
+
+      <WorkoutForm />
 
       <SeasonTotals workouts={workouts} />
 
