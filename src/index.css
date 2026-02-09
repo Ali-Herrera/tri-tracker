@@ -496,6 +496,10 @@ body {
   gap: 0.5rem;
 }
 
+.ref-template-notes {
+  white-space: pre-wrap;
+}
+
 .ref-library {
   display: grid;
   gap: 1rem;

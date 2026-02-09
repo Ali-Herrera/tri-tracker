@@ -8,6 +8,7 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { usePlannedWorkoutActions } from '../hooks/usePlannedWorkoutActions';
 import { useAuth } from '../hooks/useAuth';
@@ -57,6 +58,13 @@ export default function References() {
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [templates, setTemplates] = useState<TemplateWorkout[]>([]);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(
+    null,
+  );
+  const [editingTemplate, setEditingTemplate] = useState<Omit<
+    TemplateWorkout,
+    'id'
+  > | null>(null);
 
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
@@ -228,7 +236,7 @@ export default function References() {
     await addDoc(collection(db, 'users', user.uid, 'referenceWorkouts'), {
       sport: newTemplate.sport,
       title: newTemplate.title.trim(),
-      notes: newTemplate.notes.trim(),
+      notes: newTemplate.notes,
       easyMinutes: newTemplate.easyMinutes,
       hardMinutes: newTemplate.hardMinutes,
       createdAt: serverTimestamp(),
@@ -242,7 +250,45 @@ export default function References() {
 
   const handleDeleteTemplate = async (id: string) => {
     if (!user) return;
+    if (editingTemplateId === id) {
+      setEditingTemplateId(null);
+      setEditingTemplate(null);
+    }
     await deleteDoc(doc(db, 'users', user.uid, 'referenceWorkouts', id));
+  };
+
+  const handleEditTemplate = (template: TemplateWorkout) => {
+    setEditingTemplateId(template.id);
+    setEditingTemplate({
+      sport: template.sport,
+      title: template.title,
+      notes: template.notes,
+      easyMinutes: template.easyMinutes,
+      hardMinutes: template.hardMinutes,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTemplateId(null);
+    setEditingTemplate(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!user || !editingTemplateId || !editingTemplate) return;
+    if (!editingTemplate.title.trim()) return;
+    await updateDoc(
+      doc(db, 'users', user.uid, 'referenceWorkouts', editingTemplateId),
+      {
+        sport: editingTemplate.sport,
+        title: editingTemplate.title.trim(),
+        notes: editingTemplate.notes,
+        easyMinutes: editingTemplate.easyMinutes,
+        hardMinutes: editingTemplate.hardMinutes,
+        updatedAt: serverTimestamp(),
+      },
+    );
+    setEditingTemplateId(null);
+    setEditingTemplate(null);
   };
 
   const addCustomSection = () => {
@@ -575,30 +621,156 @@ export default function References() {
           <div className='ref-templates'>
             {templates.map((template) => (
               <div key={template.id} className='ref-template-card'>
-                <div>
-                  <strong>{template.title}</strong>
-                  <div className='muted'>
-                    {template.sport} ·{' '}
-                    {template.easyMinutes + template.hardMinutes} min
-                  </div>
-                </div>
-                <p>{template.notes}</p>
-                <div className='ref-template-actions'>
-                  <button
-                    type='button'
-                    className={`filter-btn ${addedIds.has(template.id) ? 'filter-btn-success' : ''}`}
-                    onClick={() => handleCopyTemplate(template)}
-                  >
-                    {addedIds.has(template.id) ? 'Added!' : 'Add to Calendar'}
-                  </button>
-                  <button
-                    type='button'
-                    className='filter-btn'
-                    onClick={() => handleDeleteTemplate(template.id)}
-                  >
-                    Remove
-                  </button>
-                </div>
+                {editingTemplateId === template.id && editingTemplate ? (
+                  <>
+                    <label>
+                      Sport
+                      <select
+                        value={editingTemplate.sport}
+                        onChange={(e) =>
+                          setEditingTemplate((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  sport: e.target.value as CalendarSport,
+                                }
+                              : prev,
+                          )
+                        }
+                      >
+                        {SPORTS.map((sport) => (
+                          <option key={sport} value={sport}>
+                            {sport}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Title
+                      <input
+                        type='text'
+                        value={editingTemplate.title}
+                        onChange={(e) =>
+                          setEditingTemplate((prev) =>
+                            prev ? { ...prev, title: e.target.value } : prev,
+                          )
+                        }
+                      />
+                    </label>
+                    <label>
+                      Notes
+                      <textarea
+                        className='modal-textarea'
+                        rows={3}
+                        value={editingTemplate.notes}
+                        onChange={(e) =>
+                          setEditingTemplate((prev) =>
+                            prev ? { ...prev, notes: e.target.value } : prev,
+                          )
+                        }
+                      />
+                    </label>
+                    <div className='pace-row'>
+                      <label>
+                        Easy Minutes
+                        <input
+                          type='number'
+                          min={0}
+                          value={editingTemplate.easyMinutes || ''}
+                          placeholder='0'
+                          onChange={(e) =>
+                            setEditingTemplate((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    easyMinutes: Number(e.target.value) || 0,
+                                  }
+                                : prev,
+                            )
+                          }
+                        />
+                      </label>
+                      <label>
+                        Hard Minutes
+                        <input
+                          type='number'
+                          min={0}
+                          value={editingTemplate.hardMinutes || ''}
+                          placeholder='0'
+                          onChange={(e) =>
+                            setEditingTemplate((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    hardMinutes: Number(e.target.value) || 0,
+                                  }
+                                : prev,
+                            )
+                          }
+                        />
+                      </label>
+                    </div>
+                    <div className='ref-template-actions'>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={handleSaveEdit}
+                      >
+                        Save
+                      </button>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={handleCancelEdit}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <strong>{template.title}</strong>
+                      <div className='muted'>
+                        {template.sport} ·{' '}
+                        {template.easyMinutes + template.hardMinutes} min
+                      </div>
+                    </div>
+                    <p className='ref-template-notes'>{template.notes}</p>
+                    <div className='ref-template-actions'>
+                      <button
+                        type='button'
+                        className={`filter-btn ${addedIds.has(template.id) ? 'filter-btn-success' : ''}`}
+                        onClick={() => handleCopyTemplate(template)}
+                      >
+                        {addedIds.has(template.id)
+                          ? 'Added!'
+                          : 'Add to Calendar'}
+                      </button>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={() => handleEditTemplate(template)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={() => handleDeleteTemplate(template.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
             {!loading && templates.length === 0 && (
@@ -607,7 +779,6 @@ export default function References() {
           </div>
         </div>
       </section>
-
     </div>
   );
 }
