@@ -53,6 +53,7 @@ export default function Calendar() {
     deletePlannedWorkout,
     copyPlannedWorkout,
     completePlannedWorkout,
+    updateCompletedWorkout,
   } = usePlannedWorkouts(queryStart, queryEnd);
 
   // 5px activation distance so clicks don't trigger drags
@@ -144,6 +145,7 @@ export default function Calendar() {
         onDelete={deletePlannedWorkout}
         onCopy={copyPlannedWorkout}
         onComplete={completePlannedWorkout}
+        onUpdateCompleted={updateCompletedWorkout}
         initialDate={selectedDate}
         existingWorkout={editingWorkout}
       />

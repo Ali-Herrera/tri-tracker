@@ -97,53 +97,129 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     });
   };
 
-  const completePlannedWorkout = async (
-    workout: PlannedWorkout,
-    distance: number,
-    adaptation?: AdaptationCompletionInput,
-  ) => {
-    if (!user) return;
-    // Mark planned workout as completed
-    const ref = doc(db, 'users', user.uid, 'plannedWorkouts', workout.id);
-    await updateDoc(ref, { completed: true });
-
-    // Log to the workouts collection for volume tracking
+  const buildWorkoutData = (workout: PlannedWorkout, distance: number) => {
     const duration = workout.easyMinutes + workout.hardMinutes;
     const total = duration || 1;
     const intensity = Math.round(
       (workout.easyMinutes * 3 + workout.hardMinutes * 8) / total,
     );
     const sport = SPORT_MAP[workout.sport] || 'Strength';
-    await addDoc(collection(db, 'users', user.uid, 'workouts'), {
+    return {
       date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
       sport,
       duration,
       distance,
       intensity,
       load: duration * intensity,
+    };
+  };
+
+  const buildAdaptationData = (
+    workout: PlannedWorkout,
+    adaptation: AdaptationCompletionInput,
+  ) => {
+    let work = 0;
+    if (adaptation.discipline === 'Bike') {
+      work = adaptation.avgPower ?? 0;
+    } else if (adaptation.discipline === 'Run') {
+      const paceDecimal =
+        (adaptation.paceMin ?? 0) + (adaptation.paceSec ?? 0) / 60;
+      work = paceDecimal > 0 ? (1 / paceDecimal) * 1000 : 0;
+    } else {
+      work = adaptation.swimSpeed ?? 0;
+    }
+    const ef =
+      adaptation.avgHr > 0 ? +(work / adaptation.avgHr).toFixed(4) : 0;
+    return {
+      date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
+      discipline: adaptation.discipline,
+      type: adaptation.type,
+      ef,
+      decoupling: adaptation.drift,
+    };
+  };
+
+  const completePlannedWorkout = async (
+    workout: PlannedWorkout,
+    distance: number,
+    adaptation?: AdaptationCompletionInput,
+  ) => {
+    if (!user) return;
+    const ref = doc(db, 'users', user.uid, 'plannedWorkouts', workout.id);
+
+    const workoutDoc = await addDoc(
+      collection(db, 'users', user.uid, 'workouts'),
+      buildWorkoutData(workout, distance),
+    );
+
+    let adaptationDocId: string | undefined;
+    if (adaptation) {
+      const adaptationDoc = await addDoc(
+        collection(db, 'users', user.uid, 'adaptations'),
+        buildAdaptationData(workout, adaptation),
+      );
+      adaptationDocId = adaptationDoc.id;
+    }
+
+    await updateDoc(ref, {
+      completed: true,
+      workoutDocId: workoutDoc.id,
+      adaptationDocId: adaptationDocId ?? null,
+      completedDistance: distance,
+      completedAdaptation: adaptation ?? null,
     });
+  };
+
+  const updateCompletedWorkout = async (
+    workout: PlannedWorkout,
+    distance: number,
+    adaptation?: AdaptationCompletionInput,
+  ) => {
+    if (!user) return;
+    const ref = doc(db, 'users', user.uid, 'plannedWorkouts', workout.id);
+
+    if (workout.workoutDocId) {
+      const workoutRef = doc(
+        db,
+        'users',
+        user.uid,
+        'workouts',
+        workout.workoutDocId,
+      );
+      await updateDoc(workoutRef, buildWorkoutData(workout, distance));
+    }
 
     if (adaptation) {
-      let work = 0;
-      if (adaptation.discipline === 'Bike') {
-        work = adaptation.avgPower ?? 0;
-      } else if (adaptation.discipline === 'Run') {
-        const paceDecimal =
-          (adaptation.paceMin ?? 0) + (adaptation.paceSec ?? 0) / 60;
-        work = paceDecimal > 0 ? (1 / paceDecimal) * 1000 : 0;
+      if (workout.adaptationDocId) {
+        const adaptationRef = doc(
+          db,
+          'users',
+          user.uid,
+          'adaptations',
+          workout.adaptationDocId,
+        );
+        await updateDoc(
+          adaptationRef,
+          buildAdaptationData(workout, adaptation),
+        );
       } else {
-        work = adaptation.swimSpeed ?? 0;
+        const adaptationDoc = await addDoc(
+          collection(db, 'users', user.uid, 'adaptations'),
+          buildAdaptationData(workout, adaptation),
+        );
+        await updateDoc(ref, { adaptationDocId: adaptationDoc.id });
       }
-      const ef =
-        adaptation.avgHr > 0 ? +(work / adaptation.avgHr).toFixed(4) : 0;
-      await addDoc(collection(db, 'users', user.uid, 'adaptations'), {
-        date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
-        discipline: adaptation.discipline,
-        type: adaptation.type,
-        ef,
-        decoupling: adaptation.drift,
-      });
+    } else if (workout.adaptationDocId) {
+      await deleteDoc(
+        doc(db, 'users', user.uid, 'adaptations', workout.adaptationDocId),
+      );
+      await updateDoc(ref, { adaptationDocId: null });
     }
+
+    await updateDoc(ref, {
+      completedDistance: distance,
+      completedAdaptation: adaptation ?? null,
+    });
   };
 
   return {
@@ -154,5 +230,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     deletePlannedWorkout,
     copyPlannedWorkout,
     completePlannedWorkout,
+    updateCompletedWorkout,
   };
 }

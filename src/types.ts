@@ -55,6 +55,10 @@ export interface PlannedWorkout {
   easyMinutes: number;
   hardMinutes: number;
   completed?: boolean;
+  workoutDocId?: string;
+  adaptationDocId?: string;
+  completedDistance?: number;
+  completedAdaptation?: AdaptationCompletionInput;
 }
 
 export interface PublicProfile {

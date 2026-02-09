@@ -47,6 +47,11 @@ interface Props {
     distance: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
+  onUpdateCompleted: (
+    workout: PlannedWorkout,
+    distance: number,
+    adaptation?: AdaptationCompletionInput,
+  ) => Promise<void>;
   initialDate: string;
   existingWorkout: PlannedWorkout | null;
 }
@@ -59,6 +64,7 @@ export default function PlannedWorkoutModal({
   onDelete,
   onCopy,
   onComplete,
+  onUpdateCompleted,
   initialDate,
   existingWorkout,
 }: Props) {
@@ -84,7 +90,7 @@ export default function PlannedWorkoutModal({
   useEffect(() => {
     if (!isOpen) return;
     setCompleting(false);
-    setDistance(0);
+    setDistance(existingWorkout?.completedDistance ?? 0);
     if (existingWorkout) {
       setDate(existingWorkout.date);
       setSport(existingWorkout.sport);
@@ -100,16 +106,27 @@ export default function PlannedWorkoutModal({
       setEasyMinutes(30);
       setHardMinutes(0);
     }
-    const discipline = getDiscipline(existingWorkout?.sport ?? 'Run');
-    if (discipline) {
-      setAdaptationType(ADAPTATION_OPTIONS[discipline][0]);
+    const baseDiscipline = getDiscipline(existingWorkout?.sport ?? 'Run');
+    const completedAdaptation = existingWorkout?.completedAdaptation;
+    if (completedAdaptation) {
+      setAdaptationType(completedAdaptation.type);
+      setAvgPower(completedAdaptation.avgPower ?? 0);
+      setPaceMin(completedAdaptation.paceMin ?? 0);
+      setPaceSec(completedAdaptation.paceSec ?? 0);
+      setSwimSpeed(completedAdaptation.swimSpeed ?? 0);
+      setAvgHr(completedAdaptation.avgHr ?? 0);
+      setDrift(completedAdaptation.drift ?? 0);
+    } else {
+      if (baseDiscipline) {
+        setAdaptationType(ADAPTATION_OPTIONS[baseDiscipline][0]);
+      }
+      setAvgPower(130);
+      setPaceMin(9);
+      setPaceSec(30);
+      setSwimSpeed(100);
+      setAvgHr(120);
+      setDrift(0);
     }
-    setAvgPower(130);
-    setPaceMin(9);
-    setPaceSec(30);
-    setSwimSpeed(100);
-    setAvgHr(120);
-    setDrift(0);
   }, [existingWorkout, initialDate, isOpen]);
 
   if (!isOpen) return null;
@@ -191,6 +208,29 @@ export default function PlannedWorkoutModal({
           }
         : undefined;
       await onComplete(existingWorkout, distance, adaptationInput);
+      onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUpdateCompleted = async () => {
+    if (!isEditing || !existingWorkout.completed) return;
+    setSubmitting(true);
+    try {
+      const adaptationInput = adaptationDiscipline
+        ? {
+            discipline: adaptationDiscipline,
+            type: adaptationType,
+            avgHr,
+            drift,
+            avgPower: adaptationDiscipline === 'Bike' ? avgPower : undefined,
+            paceMin: adaptationDiscipline === 'Run' ? paceMin : undefined,
+            paceSec: adaptationDiscipline === 'Run' ? paceSec : undefined,
+            swimSpeed: adaptationDiscipline === 'Swim' ? swimSpeed : undefined,
+          }
+        : undefined;
+      await onUpdateCompleted(existingWorkout, distance, adaptationInput);
       onClose();
     } finally {
       setSubmitting(false);
@@ -442,8 +482,150 @@ export default function PlannedWorkoutModal({
                   </button>
                 </div>
               )}
-              {existingWorkout.completed && (
-                <p className='completed-label'>Logged to Dashboard</p>
+              {existingWorkout.completed && !completing && (
+                <div className='complete-prompt'>
+                  <p className='completed-label'>Logged to Dashboard</p>
+                  <button
+                    type='button'
+                    className='complete-btn'
+                    onClick={handleCompleteClick}
+                    disabled={submitting}
+                  >
+                    Edit Logged Workout
+                  </button>
+                </div>
+              )}
+              {existingWorkout.completed && completing && (
+                <div className='complete-prompt'>
+                  <label>
+                    Distance ({sport === 'Swim' ? 'yards' : 'miles'})
+                    <input
+                      type='number'
+                      min={0}
+                      step={0.1}
+                      value={distance || ''}
+                      placeholder='0'
+                      onChange={(e) => setDistance(Number(e.target.value) || 0)}
+                      autoFocus
+                    />
+                  </label>
+                  {adaptationDiscipline && (
+                    <>
+                      <label>
+                        Workout Category
+                        <select
+                          value={adaptationType}
+                          onChange={(e) => setAdaptationType(e.target.value)}
+                        >
+                          {ADAPTATION_OPTIONS[adaptationDiscipline].map(
+                            (opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </label>
+                      {adaptationDiscipline === 'Bike' && (
+                        <label>
+                          Avg Power (Watts)
+                          <input
+                            type='number'
+                            min={0}
+                            value={avgPower || ''}
+                            placeholder='0'
+                            onChange={(e) =>
+                              setAvgPower(Number(e.target.value) || 0)
+                            }
+                            required
+                          />
+                        </label>
+                      )}
+                      {adaptationDiscipline === 'Run' && (
+                        <div className='pace-row'>
+                          <label>
+                            Pace Min
+                            <input
+                              type='number'
+                              min={0}
+                              max={20}
+                              value={paceMin || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setPaceMin(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                          <label>
+                            Pace Sec
+                            <input
+                              type='number'
+                              min={0}
+                              max={59}
+                              value={paceSec || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setPaceSec(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                        </div>
+                      )}
+                      {adaptationDiscipline === 'Swim' && (
+                        <label>
+                          Avg Speed
+                          <input
+                            type='number'
+                            min={0}
+                            value={swimSpeed || ''}
+                            placeholder='0'
+                            onChange={(e) =>
+                              setSwimSpeed(Number(e.target.value) || 0)
+                            }
+                            required
+                          />
+                        </label>
+                      )}
+                      <label>
+                        Avg Heart Rate (BPM)
+                        <input
+                          type='number'
+                          min={1}
+                          value={avgHr || ''}
+                          placeholder='0'
+                          onChange={(e) => setAvgHr(Number(e.target.value) || 0)}
+                          required
+                        />
+                      </label>
+                      <label>
+                        Decoupling / Drift (%)
+                        <input
+                          type='number'
+                          min={-100}
+                          max={100}
+                          step={0.1}
+                          value={drift || ''}
+                          placeholder='0'
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            if (e.target.value === '' || Number.isFinite(v))
+                              setDrift(v || 0);
+                          }}
+                        />
+                      </label>
+                    </>
+                  )}
+                  <button
+                    type='button'
+                    className='complete-btn'
+                    onClick={handleUpdateCompleted}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Updating...' : 'Update Logged Workout'}
+                  </button>
+                </div>
               )}
               <button
                 type='button'
