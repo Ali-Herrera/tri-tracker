@@ -70,6 +70,12 @@ function WorkoutCard({
         if (disableClick) return;
         onClick();
       }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        if (disableClick) return;
+        e.preventDefault();
+        onClick();
+      }}
       {...dragListeners}
       {...dragAttributes}
     >
