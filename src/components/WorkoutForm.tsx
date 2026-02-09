@@ -60,8 +60,9 @@ export default function WorkoutForm() {
           type="number"
           min={1}
           step={1}
-          value={duration}
-          onChange={(e) => setDuration(Number(e.target.value))}
+          value={duration || ''}
+          placeholder="0"
+          onChange={(e) => setDuration(Number(e.target.value) || 0)}
           required
         />
       </label>
@@ -72,8 +73,9 @@ export default function WorkoutForm() {
           type="number"
           min={0}
           step={0.1}
-          value={distance}
-          onChange={(e) => setDistance(Number(e.target.value))}
+          value={distance || ''}
+          placeholder="0"
+          onChange={(e) => setDistance(Number(e.target.value) || 0)}
           required
         />
       </label>

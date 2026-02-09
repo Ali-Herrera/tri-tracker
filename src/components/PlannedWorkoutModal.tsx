@@ -263,8 +263,9 @@ export default function PlannedWorkoutModal({
                 type='number'
                 min={0}
                 step={1}
-                value={easyMinutes}
-                onChange={(e) => setEasyMinutes(Number(e.target.value))}
+                value={easyMinutes || ''}
+                placeholder='0'
+                onChange={(e) => setEasyMinutes(Number(e.target.value) || 0)}
                 required
               />
             </label>
@@ -274,8 +275,9 @@ export default function PlannedWorkoutModal({
                 type='number'
                 min={0}
                 step={1}
-                value={hardMinutes}
-                onChange={(e) => setHardMinutes(Number(e.target.value))}
+                value={hardMinutes || ''}
+                placeholder='0'
+                onChange={(e) => setHardMinutes(Number(e.target.value) || 0)}
                 required
               />
             </label>
@@ -313,8 +315,9 @@ export default function PlannedWorkoutModal({
                       type='number'
                       min={0}
                       step={0.1}
-                      value={distance}
-                      onChange={(e) => setDistance(Number(e.target.value))}
+                      value={distance || ''}
+                      placeholder='0'
+                      onChange={(e) => setDistance(Number(e.target.value) || 0)}
                       autoFocus
                     />
                   </label>
@@ -341,9 +344,10 @@ export default function PlannedWorkoutModal({
                           <input
                             type='number'
                             min={0}
-                            value={avgPower}
+                            value={avgPower || ''}
+                            placeholder='0'
                             onChange={(e) =>
-                              setAvgPower(Number(e.target.value))
+                              setAvgPower(Number(e.target.value) || 0)
                             }
                             required
                           />
@@ -357,9 +361,10 @@ export default function PlannedWorkoutModal({
                               type='number'
                               min={0}
                               max={20}
-                              value={paceMin}
+                              value={paceMin || ''}
+                              placeholder='0'
                               onChange={(e) =>
-                                setPaceMin(Number(e.target.value))
+                                setPaceMin(Number(e.target.value) || 0)
                               }
                               required
                             />
@@ -370,9 +375,10 @@ export default function PlannedWorkoutModal({
                               type='number'
                               min={0}
                               max={59}
-                              value={paceSec}
+                              value={paceSec || ''}
+                              placeholder='0'
                               onChange={(e) =>
-                                setPaceSec(Number(e.target.value))
+                                setPaceSec(Number(e.target.value) || 0)
                               }
                               required
                             />
@@ -385,9 +391,10 @@ export default function PlannedWorkoutModal({
                           <input
                             type='number'
                             min={0}
-                            value={swimSpeed}
+                            value={swimSpeed || ''}
+                            placeholder='0'
                             onChange={(e) =>
-                              setSwimSpeed(Number(e.target.value))
+                              setSwimSpeed(Number(e.target.value) || 0)
                             }
                             required
                           />
@@ -398,8 +405,9 @@ export default function PlannedWorkoutModal({
                         <input
                           type='number'
                           min={1}
-                          value={avgHr}
-                          onChange={(e) => setAvgHr(Number(e.target.value))}
+                          value={avgHr || ''}
+                          placeholder='0'
+                          onChange={(e) => setAvgHr(Number(e.target.value) || 0)}
                           required
                         />
                       </label>
@@ -410,8 +418,12 @@ export default function PlannedWorkoutModal({
                           min={-100}
                           max={100}
                           step={0.1}
-                          value={drift}
-                          onChange={(e) => setDrift(Number(e.target.value))}
+                          value={drift || ''}
+                          placeholder='0'
+                          onChange={(e) => {
+                            const v = Number(e.target.value);
+                            if (e.target.value === '' || Number.isFinite(v)) setDrift(v || 0);
+                          }}
                         />
                       </label>
                     </>

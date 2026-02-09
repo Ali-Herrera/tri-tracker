@@ -537,11 +537,12 @@ export default function References() {
                 <input
                   type='number'
                   min={0}
-                  value={newTemplate.easyMinutes}
+                  value={newTemplate.easyMinutes || ''}
+                  placeholder='0'
                   onChange={(e) =>
                     setNewTemplate((prev) => ({
                       ...prev,
-                      easyMinutes: Number(e.target.value),
+                      easyMinutes: Number(e.target.value) || 0,
                     }))
                   }
                 />
@@ -551,11 +552,12 @@ export default function References() {
                 <input
                   type='number'
                   min={0}
-                  value={newTemplate.hardMinutes}
+                  value={newTemplate.hardMinutes || ''}
+                  placeholder='0'
                   onChange={(e) =>
                     setNewTemplate((prev) => ({
                       ...prev,
-                      hardMinutes: Number(e.target.value),
+                      hardMinutes: Number(e.target.value) || 0,
                     }))
                   }
                 />

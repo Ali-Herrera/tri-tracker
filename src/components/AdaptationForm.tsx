@@ -94,7 +94,7 @@ export default function AdaptationForm() {
       {discipline === "Bike" && (
         <label>
           Avg Power (Watts)
-          <input type="number" min={0} value={avgPower} onChange={(e) => setAvgPower(Number(e.target.value))} />
+          <input type="number" min={0} value={avgPower || ''} placeholder="0" onChange={(e) => setAvgPower(Number(e.target.value) || 0)} />
         </label>
       )}
 
@@ -102,11 +102,11 @@ export default function AdaptationForm() {
         <div className="pace-row">
           <label>
             Pace Min
-            <input type="number" min={0} max={20} value={paceMin} onChange={(e) => setPaceMin(Number(e.target.value))} />
+            <input type="number" min={0} max={20} value={paceMin || ''} placeholder="0" onChange={(e) => setPaceMin(Number(e.target.value) || 0)} />
           </label>
           <label>
             Pace Sec
-            <input type="number" min={0} max={59} value={paceSec} onChange={(e) => setPaceSec(Number(e.target.value))} />
+            <input type="number" min={0} max={59} value={paceSec || ''} placeholder="0" onChange={(e) => setPaceSec(Number(e.target.value) || 0)} />
           </label>
         </div>
       )}
@@ -114,13 +114,13 @@ export default function AdaptationForm() {
       {discipline === "Swim" && (
         <label>
           Avg Speed
-          <input type="number" min={0} value={swimSpeed} onChange={(e) => setSwimSpeed(Number(e.target.value))} />
+          <input type="number" min={0} value={swimSpeed || ''} placeholder="0" onChange={(e) => setSwimSpeed(Number(e.target.value) || 0)} />
         </label>
       )}
 
       <label>
         Avg Heart Rate (BPM)
-        <input type="number" min={1} value={avgHr} onChange={(e) => setAvgHr(Number(e.target.value))} required />
+        <input type="number" min={1} value={avgHr || ''} placeholder="0" onChange={(e) => setAvgHr(Number(e.target.value) || 0)} required />
       </label>
 
       <label>
@@ -130,8 +130,12 @@ export default function AdaptationForm() {
           min={-100}
           max={100}
           step={0.1}
-          value={drift}
-          onChange={(e) => setDrift(Number(e.target.value))}
+          value={drift || ''}
+          placeholder="0"
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            if (e.target.value === '' || Number.isFinite(v)) setDrift(v || 0);
+          }}
         />
       </label>
 
