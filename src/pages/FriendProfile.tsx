@@ -10,7 +10,6 @@ import {
   subDays,
   subMonths,
 } from 'date-fns';
-import { DndContext } from '@dnd-kit/core';
 import { useFriends } from '../hooks/useFriends';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { useUserPlannedWorkouts } from '../hooks/useUserPlannedWorkouts';
@@ -19,6 +18,9 @@ import ActivityLog from '../components/ActivityLog';
 import CalendarGrid from '../components/CalendarGrid';
 import LifetimeTotals from '../components/LifetimeTotals';
 import WeeklyVolumeChart from '../components/WeeklyVolumeChart';
+import WorkoutDetailsModal from '../components/WorkoutDetailsModal';
+import PlannedWorkoutDetailsModal from '../components/PlannedWorkoutDetailsModal';
+import type { PlannedWorkout, Workout } from '../types';
 
 const noop = () => {};
 
@@ -31,6 +33,10 @@ export default function FriendProfile() {
     startOfMonth(new Date()),
   );
   const [weekMode, setWeekMode] = useState<7 | 9>(7);
+  const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null);
+  const [selectedPlanned, setSelectedPlanned] = useState<PlannedWorkout | null>(
+    null,
+  );
 
   const isFriend = useMemo(() => {
     if (!uid) return false;
@@ -158,15 +164,14 @@ export default function FriendProfile() {
         {plannedLoading ? (
           <p className='muted'>Loading planned workouts...</p>
         ) : (
-          <DndContext>
-            <CalendarGrid
-              month={currentMonth}
-              weekMode={weekMode}
-              workouts={plannedWorkouts}
-              onDayClick={noop}
-              onWorkoutClick={noop}
-            />
-          </DndContext>
+          <CalendarGrid
+            month={currentMonth}
+            weekMode={weekMode}
+            workouts={plannedWorkouts}
+            onDayClick={noop}
+            onWorkoutClick={(workout) => setSelectedPlanned(workout)}
+            enableDrag={false}
+          />
         )}
       </section>
 
@@ -180,10 +185,26 @@ export default function FriendProfile() {
               workouts={recentWorkouts}
               timeFrame='Last 30 Days'
             />
-            <ActivityLog workouts={recentWorkouts} timeFrame='Last 30 Days' />
+            <ActivityLog
+              workouts={recentWorkouts}
+              timeFrame='Last 30 Days'
+              onWorkoutClick={(workout) => setSelectedWorkout(workout)}
+            />
           </>
         )}
       </section>
+
+      <WorkoutDetailsModal
+        isOpen={!!selectedWorkout}
+        workout={selectedWorkout}
+        onClose={() => setSelectedWorkout(null)}
+        title='Workout Details (Read Only)'
+      />
+      <PlannedWorkoutDetailsModal
+        isOpen={!!selectedPlanned}
+        workout={selectedPlanned}
+        onClose={() => setSelectedPlanned(null)}
+      />
     </div>
   );
 }

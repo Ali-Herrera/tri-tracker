@@ -6,12 +6,14 @@ interface Props {
   workouts: Workout[];
   timeFrame: string;
   onClearAll?: () => Promise<void>;
+  onWorkoutClick?: (workout: Workout) => void;
 }
 
 export default function ActivityLog({
   workouts,
   timeFrame,
   onClearAll,
+  onWorkoutClick,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -33,6 +35,17 @@ export default function ActivityLog({
       setConfirming(false);
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleRowKeyDown = (
+    event: React.KeyboardEvent<HTMLTableRowElement>,
+    workout: Workout,
+  ) => {
+    if (!onWorkoutClick) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onWorkoutClick(workout);
     }
   };
 
@@ -92,7 +105,13 @@ export default function ActivityLog({
             </thead>
             <tbody>
               {workouts.map((w) => (
-                <tr key={w.id}>
+                <tr
+                  key={w.id}
+                  className={onWorkoutClick ? 'activity-log-row clickable' : ''}
+                  onClick={() => onWorkoutClick?.(w)}
+                  onKeyDown={(event) => handleRowKeyDown(event, w)}
+                  tabIndex={onWorkoutClick ? 0 : undefined}
+                >
                   <td>{format(w.date.toDate(), 'MMM d, yyyy')}</td>
                   <td>{w.sport}</td>
                   <td>{w.duration} min</td>

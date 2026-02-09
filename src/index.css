@@ -500,6 +500,10 @@ body {
   white-space: pre-wrap;
 }
 
+.workout-notes {
+  white-space: pre-wrap;
+}
+
 .ref-library {
   display: grid;
   gap: 1rem;
@@ -649,6 +653,14 @@ body {
   display: block;
   max-height: 480px;
   overflow-y: auto;
+}
+
+.activity-log-row.clickable {
+  cursor: pointer;
+}
+
+.activity-log-row.clickable:hover {
+  background: rgba(99, 110, 250, 0.08);
 }
 
 .danger-zone {
@@ -1029,6 +1041,8 @@ section {
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  max-height: 140px;
+  overflow-y: auto;
 }
 
 .cal-workout-card {
@@ -1040,9 +1054,9 @@ section {
   cursor: grab;
   display: flex;
   gap: 4px;
-  align-items: center;
-  white-space: nowrap;
-  overflow: hidden;
+  align-items: flex-start;
+  white-space: normal;
+  overflow: visible;
 }
 
 .cal-workout-card:active {

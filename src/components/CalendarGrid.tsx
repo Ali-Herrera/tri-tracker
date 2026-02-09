@@ -27,6 +27,62 @@ const sortWorkouts = (a: PlannedWorkout, b: PlannedWorkout) => {
   return a.title.localeCompare(b.title);
 };
 
+/* ---------- Workout cards ---------- */
+
+function WorkoutCard({
+  workout,
+  onClick,
+  disableClick,
+  isDragging,
+  setNodeRef,
+  dragAttributes,
+  dragListeners,
+  dragTransform,
+}: {
+  workout: PlannedWorkout;
+  onClick: () => void;
+  disableClick?: boolean;
+  isDragging?: boolean;
+  setNodeRef?: (node: HTMLDivElement | null) => void;
+  dragAttributes?: React.HTMLAttributes<HTMLDivElement>;
+  dragListeners?: React.HTMLAttributes<HTMLDivElement>;
+  dragTransform?: { x: number; y: number } | null;
+}) {
+  const style: React.CSSProperties = {
+    borderLeftColor: SPORT_COLORS[workout.sport] || 'var(--border)',
+    ...(dragTransform
+      ? {
+          transform: `translate(${dragTransform.x}px, ${dragTransform.y}px)`,
+          zIndex: 100,
+          opacity: 0.9,
+        }
+      : {}),
+    ...(isDragging ? { pointerEvents: 'none' as const } : {}),
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`cal-workout-card${workout.completed ? ' cal-card-done' : ''}`}
+      style={style}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (disableClick) return;
+        onClick();
+      }}
+      {...dragListeners}
+      {...dragAttributes}
+    >
+      {workout.completed && <span className='cal-check'>&#10003;</span>}
+      <span className='cal-workout-sport'>{workout.sport}</span>
+      <span className='cal-workout-title'>{workout.title}</span>
+      <span className='cal-workout-duration'>
+        {workout.easyMinutes + workout.hardMinutes}m
+      </span>
+    </div>
+  );
+}
+
 /* ---------- Draggable workout card ---------- */
 
 function DraggableWorkoutCard({
@@ -71,38 +127,17 @@ function DraggableWorkoutCard({
     setDropRef(node);
   };
 
-  const style: React.CSSProperties = {
-    borderLeftColor: SPORT_COLORS[workout.sport] || 'var(--border)',
-    ...(transform
-      ? {
-          transform: `translate(${transform.x}px, ${transform.y}px)`,
-          zIndex: 100,
-          opacity: 0.9,
-        }
-      : {}),
-    ...(isDragging ? { pointerEvents: 'none' as const } : {}),
-  };
-
   return (
-    <div
-      ref={setNodeRef}
-      className={`cal-workout-card${workout.completed ? ' cal-card-done' : ''}`}
-      style={style}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (disableClick) return;
-        onClick();
-      }}
-      {...listeners}
-      {...attributes}
-    >
-      {workout.completed && <span className='cal-check'>&#10003;</span>}
-      <span className='cal-workout-sport'>{workout.sport}</span>
-      <span className='cal-workout-title'>{workout.title}</span>
-      <span className='cal-workout-duration'>
-        {workout.easyMinutes + workout.hardMinutes}m
-      </span>
-    </div>
+    <WorkoutCard
+      workout={workout}
+      onClick={onClick}
+      disableClick={disableClick}
+      isDragging={isDragging}
+      setNodeRef={setNodeRef}
+      dragAttributes={attributes}
+      dragListeners={listeners}
+      dragTransform={transform}
+    />
   );
 }
 
@@ -116,6 +151,7 @@ function DroppableDay({
   onDayClick,
   onWorkoutClick,
   disableClick,
+  enableDrag,
 }: {
   dateStr: string;
   day: Date;
@@ -124,6 +160,7 @@ function DroppableDay({
   onDayClick: (date: string) => void;
   onWorkoutClick: (workout: PlannedWorkout) => void;
   disableClick?: boolean;
+  enableDrag?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({
     id: `day-${dateStr}`,
@@ -148,14 +185,23 @@ function DroppableDay({
     >
       <span className='cal-day-number'>{format(day, 'd')}</span>
       <div className='cal-day-workouts'>
-        {workouts.map((w) => (
-          <DraggableWorkoutCard
-            key={w.id}
-            workout={w}
-            onClick={() => onWorkoutClick(w)}
-            disableClick={disableClick}
-          />
-        ))}
+        {workouts.map((w) =>
+          enableDrag ? (
+            <DraggableWorkoutCard
+              key={w.id}
+              workout={w}
+              onClick={() => onWorkoutClick(w)}
+              disableClick={disableClick}
+            />
+          ) : (
+            <WorkoutCard
+              key={w.id}
+              workout={w}
+              onClick={() => onWorkoutClick(w)}
+              disableClick={disableClick}
+            />
+          ),
+        )}
       </div>
     </div>
   );
@@ -198,6 +244,7 @@ interface CalendarGridProps {
   onDayClick: (date: string) => void;
   onWorkoutClick: (workout: PlannedWorkout) => void;
   isDragging?: boolean;
+  enableDrag?: boolean;
 }
 
 export default function CalendarGrid({
@@ -207,6 +254,7 @@ export default function CalendarGrid({
   onDayClick,
   onWorkoutClick,
   isDragging,
+  enableDrag = true,
 }: CalendarGridProps) {
   const workoutsByDate = useMemo(() => {
     const map = new Map<string, PlannedWorkout[]>();
@@ -276,6 +324,7 @@ export default function CalendarGrid({
                     onDayClick={onDayClick}
                     onWorkoutClick={onWorkoutClick}
                     disableClick={isDragging}
+                    enableDrag={enableDrag}
                   />
                 );
               })}
