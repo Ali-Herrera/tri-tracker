@@ -162,7 +162,9 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
         (adaptation.paceMin ?? 0) + (adaptation.paceSec ?? 0) / 60;
       work = paceDecimal > 0 ? (1 / paceDecimal) * 1000 : 0;
     } else {
-      work = adaptation.swimSpeed ?? 0;
+      const swimPace =
+        (adaptation.swimPaceMin ?? 0) + (adaptation.swimPaceSec ?? 0) / 60;
+      work = swimPace > 0 ? (1 / swimPace) * 1000 : 0;
     }
     const ef = adaptation.avgHr > 0 ? +(work / adaptation.avgHr).toFixed(4) : 0;
     return {

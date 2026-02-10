@@ -30,7 +30,8 @@ export interface AdaptationCompletionInput {
   avgPower?: number;
   paceMin?: number;
   paceSec?: number;
-  swimSpeed?: number;
+  swimPaceMin?: number;
+  swimPaceSec?: number;
 }
 
 export interface Race {

@@ -89,7 +89,8 @@ export default function PlannedWorkoutModal({
   const [avgPower, setAvgPower] = useState(130);
   const [paceMin, setPaceMin] = useState(9);
   const [paceSec, setPaceSec] = useState(30);
-  const [swimSpeed, setSwimSpeed] = useState(100);
+  const [swimPaceMin, setSwimPaceMin] = useState(2);
+  const [swimPaceSec, setSwimPaceSec] = useState(0);
   const [avgHr, setAvgHr] = useState(120);
   const [drift, setDrift] = useState(0);
 
@@ -126,7 +127,8 @@ export default function PlannedWorkoutModal({
       setAvgPower(completedAdaptation.avgPower ?? 0);
       setPaceMin(completedAdaptation.paceMin ?? 0);
       setPaceSec(completedAdaptation.paceSec ?? 0);
-      setSwimSpeed(completedAdaptation.swimSpeed ?? 0);
+      setSwimPaceMin(completedAdaptation.swimPaceMin ?? 0);
+      setSwimPaceSec(completedAdaptation.swimPaceSec ?? 0);
       setAvgHr(completedAdaptation.avgHr ?? 0);
       setDrift(completedAdaptation.drift ?? 0);
     } else {
@@ -136,7 +138,8 @@ export default function PlannedWorkoutModal({
       setAvgPower(130);
       setPaceMin(9);
       setPaceSec(30);
-      setSwimSpeed(100);
+      setSwimPaceMin(2);
+      setSwimPaceSec(0);
       setAvgHr(120);
       setDrift(0);
     }
@@ -217,7 +220,8 @@ export default function PlannedWorkoutModal({
             avgPower: adaptationDiscipline === 'Bike' ? avgPower : undefined,
             paceMin: adaptationDiscipline === 'Run' ? paceMin : undefined,
             paceSec: adaptationDiscipline === 'Run' ? paceSec : undefined,
-            swimSpeed: adaptationDiscipline === 'Swim' ? swimSpeed : undefined,
+            swimPaceMin: adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
+            swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
       await onComplete(existingWorkout, distance, duration, intensity, adaptationInput);
@@ -240,7 +244,8 @@ export default function PlannedWorkoutModal({
             avgPower: adaptationDiscipline === 'Bike' ? avgPower : undefined,
             paceMin: adaptationDiscipline === 'Run' ? paceMin : undefined,
             paceSec: adaptationDiscipline === 'Run' ? paceSec : undefined,
-            swimSpeed: adaptationDiscipline === 'Swim' ? swimSpeed : undefined,
+            swimPaceMin: adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
+            swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
       await onUpdateCompleted(existingWorkout, distance, duration, intensity, adaptationInput);
@@ -462,19 +467,36 @@ export default function PlannedWorkoutModal({
                         </div>
                       )}
                       {adaptationDiscipline === 'Swim' && (
-                        <label>
-                          Avg Pace (per 100 yd)
-                          <input
-                            type='number'
-                            min={0}
-                            value={swimSpeed || ''}
-                            placeholder='0'
-                            onChange={(e) =>
-                              setSwimSpeed(Number(e.target.value) || 0)
-                            }
-                            required
-                          />
-                        </label>
+                        <div className='pace-row'>
+                          <label>
+                            Pace /100yd Min
+                            <input
+                              type='number'
+                              min={0}
+                              max={20}
+                              value={swimPaceMin || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setSwimPaceMin(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                          <label>
+                            Pace /100yd Sec
+                            <input
+                              type='number'
+                              min={0}
+                              max={59}
+                              value={swimPaceSec || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setSwimPaceSec(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                        </div>
                       )}
                       <label>
                         Avg Heart Rate (BPM)
@@ -633,19 +655,36 @@ export default function PlannedWorkoutModal({
                         </div>
                       )}
                       {adaptationDiscipline === 'Swim' && (
-                        <label>
-                          Avg Pace (per 100 yd)
-                          <input
-                            type='number'
-                            min={0}
-                            value={swimSpeed || ''}
-                            placeholder='0'
-                            onChange={(e) =>
-                              setSwimSpeed(Number(e.target.value) || 0)
-                            }
-                            required
-                          />
-                        </label>
+                        <div className='pace-row'>
+                          <label>
+                            Pace /100yd Min
+                            <input
+                              type='number'
+                              min={0}
+                              max={20}
+                              value={swimPaceMin || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setSwimPaceMin(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                          <label>
+                            Pace /100yd Sec
+                            <input
+                              type='number'
+                              min={0}
+                              max={59}
+                              value={swimPaceSec || ''}
+                              placeholder='0'
+                              onChange={(e) =>
+                                setSwimPaceSec(Number(e.target.value) || 0)
+                              }
+                              required
+                            />
+                          </label>
+                        </div>
                       )}
                       <label>
                         Avg Heart Rate (BPM)

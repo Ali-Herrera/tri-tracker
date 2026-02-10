@@ -20,7 +20,8 @@ export default function AdaptationForm() {
   const [avgPower, setAvgPower] = useState(130);
   const [paceMin, setPaceMin] = useState(9);
   const [paceSec, setPaceSec] = useState(30);
-  const [swimSpeed, setSwimSpeed] = useState(100);
+  const [swimPaceMin, setSwimPaceMin] = useState(2);
+  const [swimPaceSec, setSwimPaceSec] = useState(0);
 
   const [avgHr, setAvgHr] = useState(120);
   const [drift, setDrift] = useState(0);
@@ -40,7 +41,8 @@ export default function AdaptationForm() {
       const paceDecimal = paceMin + paceSec / 60;
       work = paceDecimal > 0 ? (1 / paceDecimal) * 1000 : 0;
     } else {
-      work = swimSpeed;
+      const swimPace = swimPaceMin + swimPaceSec / 60;
+      work = swimPace > 0 ? (1 / swimPace) * 1000 : 0;
     }
     return avgHr > 0 ? +(work / avgHr).toFixed(4) : 0;
   };
@@ -112,10 +114,16 @@ export default function AdaptationForm() {
       )}
 
       {discipline === "Swim" && (
-        <label>
-          Avg Speed
-          <input type="number" min={0} value={swimSpeed || ''} placeholder="0" onChange={(e) => setSwimSpeed(Number(e.target.value) || 0)} />
-        </label>
+        <div className="pace-row">
+          <label>
+            Pace /100yd Min
+            <input type="number" min={0} max={20} value={swimPaceMin || ''} placeholder="0" onChange={(e) => setSwimPaceMin(Number(e.target.value) || 0)} required />
+          </label>
+          <label>
+            Pace /100yd Sec
+            <input type="number" min={0} max={59} value={swimPaceSec || ''} placeholder="0" onChange={(e) => setSwimPaceSec(Number(e.target.value) || 0)} required />
+          </label>
+        </div>
       )}
 
       <label>
