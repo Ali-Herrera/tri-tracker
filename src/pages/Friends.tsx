@@ -114,6 +114,49 @@ export default function Friends() {
         <h1>Friends</h1>
       </div>
 
+      <section className='friends-section'>
+        <h2>Friends</h2>
+        {friendsLoading && <p className='muted'>Loading friends...</p>}
+        {!friendsLoading && friends.length === 0 && (
+          <p className='muted'>No friends yet. Send a request below!</p>
+        )}
+        {friends.map((friend) => {
+          const friendProfile = profiles[friend.uid];
+          const name =
+            friendProfile?.displayName || friendProfile?.email || friend.uid;
+          return (
+            <div key={friend.uid} className='friend-card'>
+              <div className='friend-card-main'>
+                <div className='friend-avatar'>
+                  {friendProfile?.avatarUrl ? (
+                    <img src={friendProfile.avatarUrl} alt={name} />
+                  ) : (
+                    <span>{name.slice(0, 1).toUpperCase()}</span>
+                  )}
+                </div>
+                <div>
+                  <strong>{name}</strong>
+                  {friendProfile?.bio && (
+                    <div className='muted friend-meta'>{friendProfile.bio}</div>
+                  )}
+                </div>
+              </div>
+              <div className='friend-actions'>
+                <Link className='filter-btn' to={`/friends/${friend.uid}`}>
+                  View Profile
+                </Link>
+                <button
+                  className='filter-btn'
+                  onClick={() => removeFriend(friend.uid)}
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </section>
+
       <form className='workout-form' onSubmit={handleSave}>
         <h3>My Profile</h3>
         <label>
@@ -249,48 +292,6 @@ export default function Friends() {
         })}
       </section>
 
-      <section className='friends-section'>
-        <h2>Friends</h2>
-        {friendsLoading && <p className='muted'>Loading friends...</p>}
-        {!friendsLoading && friends.length === 0 && (
-          <p className='muted'>No friends yet. Send a request above!</p>
-        )}
-        {friends.map((friend) => {
-          const friendProfile = profiles[friend.uid];
-          const name =
-            friendProfile?.displayName || friendProfile?.email || friend.uid;
-          return (
-            <div key={friend.uid} className='friend-card'>
-              <div className='friend-card-main'>
-                <div className='friend-avatar'>
-                  {friendProfile?.avatarUrl ? (
-                    <img src={friendProfile.avatarUrl} alt={name} />
-                  ) : (
-                    <span>{name.slice(0, 1).toUpperCase()}</span>
-                  )}
-                </div>
-                <div>
-                  <strong>{name}</strong>
-                  {friendProfile?.bio && (
-                    <div className='muted friend-meta'>{friendProfile.bio}</div>
-                  )}
-                </div>
-              </div>
-              <div className='friend-actions'>
-                <Link className='filter-btn' to={`/friends/${friend.uid}`}>
-                  View Profile
-                </Link>
-                <button
-                  className='filter-btn'
-                  onClick={() => removeFriend(friend.uid)}
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </section>
     </div>
   );
 }
