@@ -20,7 +20,7 @@ const TIME_FRAMES: TimeFrame[] = [
 ];
 
 export default function Dashboard() {
-  const { workouts, loading, deleteAllWorkouts } = useWorkouts();
+  const { workouts, loading, deleteAllWorkouts, deleteWorkout } = useWorkouts();
   const [timeFrame, setTimeFrame] = useState<TimeFrame>('All Time');
   const { profile } = usePublicProfile();
 
@@ -92,6 +92,7 @@ export default function Dashboard() {
         workouts={filtered}
         timeFrame={timeFrame}
         onClearAll={deleteAllWorkouts}
+        onDelete={deleteWorkout}
       />
 
       <LifetimeTotals workouts={workouts} timeFrame={timeFrame} />

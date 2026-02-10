@@ -59,6 +59,8 @@ export interface PlannedWorkout {
   workoutDocId?: string;
   adaptationDocId?: string;
   completedDistance?: number;
+  completedDuration?: number;
+  completedIntensity?: number;
   completedAdaptation?: AdaptationCompletionInput;
 }
 

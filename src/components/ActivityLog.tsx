@@ -6,6 +6,7 @@ interface Props {
   workouts: Workout[];
   timeFrame: string;
   onClearAll?: () => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   onWorkoutClick?: (workout: Workout) => void;
 }
 
@@ -13,10 +14,12 @@ export default function ActivityLog({
   workouts,
   timeFrame,
   onClearAll,
+  onDelete,
   onWorkoutClick,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const hasWorkouts = workouts.length > 0;
 
   const handleClearClick = () => {
@@ -35,6 +38,17 @@ export default function ActivityLog({
       setConfirming(false);
     } finally {
       setClearing(false);
+    }
+  };
+
+  const handleDeleteWorkout = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!onDelete) return;
+    setDeletingId(id);
+    try {
+      await onDelete(id);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -101,6 +115,7 @@ export default function ActivityLog({
                 <th>Duration</th>
                 <th>Distance</th>
                 <th>Load</th>
+                {onDelete && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -117,6 +132,19 @@ export default function ActivityLog({
                   <td>{w.duration} min</td>
                   <td>{w.distance}</td>
                   <td>{w.load}</td>
+                  {onDelete && (
+                    <td>
+                      <button
+                        type='button'
+                        className='delete-btn delete-btn-sm'
+                        onClick={(e) => handleDeleteWorkout(e, w.id)}
+                        disabled={deletingId === w.id}
+                        title='Delete workout'
+                      >
+                        {deletingId === w.id ? '...' : '×'}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

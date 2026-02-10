@@ -45,11 +45,15 @@ interface Props {
   onComplete: (
     workout: PlannedWorkout,
     distance: number,
+    duration: number,
+    intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
   onUpdateCompleted: (
     workout: PlannedWorkout,
     distance: number,
+    duration: number,
+    intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
   initialDate: string;
@@ -77,6 +81,8 @@ export default function PlannedWorkoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [distance, setDistance] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [intensity, setIntensity] = useState(5);
   const [adaptationType, setAdaptationType] = useState(
     ADAPTATION_OPTIONS.Bike[0],
   );
@@ -91,6 +97,13 @@ export default function PlannedWorkoutModal({
     if (!isOpen) return;
     setCompleting(false);
     setDistance(existingWorkout?.completedDistance ?? 0);
+    setDuration(
+      existingWorkout?.completedDuration ??
+        (existingWorkout
+          ? existingWorkout.easyMinutes + existingWorkout.hardMinutes
+          : 30),
+    );
+    setIntensity(existingWorkout?.completedIntensity ?? 5);
     if (existingWorkout) {
       setDate(existingWorkout.date);
       setSport(existingWorkout.sport);
@@ -207,10 +220,10 @@ export default function PlannedWorkoutModal({
             swimSpeed: adaptationDiscipline === 'Swim' ? swimSpeed : undefined,
           }
         : undefined;
-      await onComplete(existingWorkout, distance, adaptationInput);
-      onClose();
+      await onComplete(existingWorkout, distance, duration, intensity, adaptationInput);
     } finally {
       setSubmitting(false);
+      onClose();
     }
   };
 
@@ -230,10 +243,10 @@ export default function PlannedWorkoutModal({
             swimSpeed: adaptationDiscipline === 'Swim' ? swimSpeed : undefined,
           }
         : undefined;
-      await onUpdateCompleted(existingWorkout, distance, adaptationInput);
-      onClose();
+      await onUpdateCompleted(existingWorkout, distance, duration, intensity, adaptationInput);
     } finally {
       setSubmitting(false);
+      onClose();
     }
   };
 
@@ -350,7 +363,19 @@ export default function PlannedWorkoutModal({
               {!existingWorkout.completed && completing && (
                 <div className='complete-prompt'>
                   <label>
-                    Distance ({sport === 'Swim' ? 'yards' : 'miles'})
+                    Duration (min)
+                    <input
+                      type='number'
+                      min={0}
+                      step={1}
+                      value={duration || ''}
+                      placeholder='0'
+                      onChange={(e) => setDuration(Number(e.target.value) || 0)}
+                      autoFocus
+                    />
+                  </label>
+                  <label>
+                    Distance ({sport === 'Swim' ? 'yd' : 'miles'})
                     <input
                       type='number'
                       min={0}
@@ -358,7 +383,18 @@ export default function PlannedWorkoutModal({
                       value={distance || ''}
                       placeholder='0'
                       onChange={(e) => setDistance(Number(e.target.value) || 0)}
-                      autoFocus
+                    />
+                  </label>
+                  <label>
+                    Intensity (1-10 RPE)
+                    <input
+                      type='number'
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={intensity || ''}
+                      placeholder='5'
+                      onChange={(e) => setIntensity(Number(e.target.value) || 0)}
                     />
                   </label>
                   {adaptationDiscipline && (
@@ -427,7 +463,7 @@ export default function PlannedWorkoutModal({
                       )}
                       {adaptationDiscipline === 'Swim' && (
                         <label>
-                          Avg Speed
+                          Avg Pace (per 100 yd)
                           <input
                             type='number'
                             min={0}
@@ -498,7 +534,19 @@ export default function PlannedWorkoutModal({
               {existingWorkout.completed && completing && (
                 <div className='complete-prompt'>
                   <label>
-                    Distance ({sport === 'Swim' ? 'yards' : 'miles'})
+                    Duration (min)
+                    <input
+                      type='number'
+                      min={0}
+                      step={1}
+                      value={duration || ''}
+                      placeholder='0'
+                      onChange={(e) => setDuration(Number(e.target.value) || 0)}
+                      autoFocus
+                    />
+                  </label>
+                  <label>
+                    Distance ({sport === 'Swim' ? 'yd' : 'miles'})
                     <input
                       type='number'
                       min={0}
@@ -506,7 +554,18 @@ export default function PlannedWorkoutModal({
                       value={distance || ''}
                       placeholder='0'
                       onChange={(e) => setDistance(Number(e.target.value) || 0)}
-                      autoFocus
+                    />
+                  </label>
+                  <label>
+                    Intensity (1-10 RPE)
+                    <input
+                      type='number'
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={intensity || ''}
+                      placeholder='5'
+                      onChange={(e) => setIntensity(Number(e.target.value) || 0)}
                     />
                   </label>
                   {adaptationDiscipline && (
@@ -575,7 +634,7 @@ export default function PlannedWorkoutModal({
                       )}
                       {adaptationDiscipline === 'Swim' && (
                         <label>
-                          Avg Speed
+                          Avg Pace (per 100 yd)
                           <input
                             type='number'
                             min={0}

@@ -26,29 +26,32 @@ interface Props {
 
 export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
   const data = useMemo(() => {
-    const weekMap = new Map<string, Record<string, number>>();
+    const weekMap = new Map<string, { sports: Record<string, number>; date: Date }>();
 
     for (const w of workouts) {
       const d = w.date.toDate();
-      const weekKey = format(startOfWeek(d, { weekStartsOn: 1 }), "MMM d");
+      const weekStart = startOfWeek(d, { weekStartsOn: 1 });
+      const weekKey = format(weekStart, "MMM d");
       if (!weekMap.has(weekKey)) {
-        weekMap.set(weekKey, { Swim: 0, Bike: 0, Run: 0, Strength: 0 });
+        weekMap.set(weekKey, { sports: { Swim: 0, Bike: 0, Run: 0, Strength: 0 }, date: weekStart });
       }
       const entry = weekMap.get(weekKey)!;
-      entry[w.sport] = (entry[w.sport] || 0) + w.duration / 60;
+      entry.sports[w.sport] = (entry.sports[w.sport] || 0) + w.duration / 60;
     }
 
     const round2 = (n: number) => Math.round(n * 100) / 100;
 
-    const rows = Array.from(weekMap.entries()).map(([week, sports]) => ({
-      week,
-      Swim: round2(sports.Swim),
-      Bike: round2(sports.Bike),
-      Run: round2(sports.Run),
-      Strength: round2(sports.Strength),
-      total: round2(sports.Swim + sports.Bike + sports.Run + sports.Strength),
-      trend: 0,
-    }));
+    const rows = Array.from(weekMap.entries())
+      .sort((a, b) => a[1].date.getTime() - b[1].date.getTime())
+      .map(([week, { sports }]) => ({
+        week,
+        Swim: round2(sports.Swim),
+        Bike: round2(sports.Bike),
+        Run: round2(sports.Run),
+        Strength: round2(sports.Strength),
+        total: round2(sports.Swim + sports.Bike + sports.Run + sports.Strength),
+        trend: 0,
+      }));
 
     // Compute 4-week rolling avg
     for (let i = 0; i < rows.length; i++) {

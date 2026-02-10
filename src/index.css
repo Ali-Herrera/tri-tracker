@@ -1161,6 +1161,13 @@ section {
   background: rgba(239, 85, 59, 0.15);
 }
 
+.delete-btn-sm {
+  width: auto;
+  padding: 0.15rem 0.45rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 /* Modal textarea */
 .modal-textarea {
   width: 100%;

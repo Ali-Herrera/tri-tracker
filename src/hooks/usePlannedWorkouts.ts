@@ -46,6 +46,8 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
       workoutDocId: workout.workoutDocId,
       adaptationDocId: workout.adaptationDocId,
       completedDistance: workout.completedDistance,
+      completedDuration: workout.completedDuration,
+      completedIntensity: workout.completedIntensity,
       completedAdaptation: workout.completedAdaptation,
     };
 
@@ -131,12 +133,12 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     await batch.commit();
   };
 
-  const buildWorkoutData = (workout: PlannedWorkout, distance: number) => {
-    const duration = workout.easyMinutes + workout.hardMinutes;
-    const total = duration || 1;
-    const intensity = Math.round(
-      (workout.easyMinutes * 3 + workout.hardMinutes * 8) / total,
-    );
+  const buildWorkoutData = (
+    workout: PlannedWorkout,
+    distance: number,
+    duration: number,
+    intensity: number,
+  ) => {
     const sport = SPORT_MAP[workout.sport] || 'Strength';
     return {
       date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
@@ -172,9 +174,21 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     };
   };
 
+  const cleanAdaptation = (
+    adaptation: AdaptationCompletionInput,
+  ): Record<string, unknown> => {
+    const clean: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(adaptation)) {
+      if (value !== undefined) clean[key] = value;
+    }
+    return clean;
+  };
+
   const completePlannedWorkout = async (
     workout: PlannedWorkout,
     distance: number,
+    duration: number,
+    intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => {
     if (!user) return;
@@ -182,7 +196,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
     const workoutDoc = await addDoc(
       collection(db, 'users', user.uid, 'workouts'),
-      buildWorkoutData(workout, distance),
+      buildWorkoutData(workout, distance, duration, intensity),
     );
 
     let adaptationDocId: string | undefined;
@@ -199,13 +213,17 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
       workoutDocId: workoutDoc.id,
       adaptationDocId: adaptationDocId ?? null,
       completedDistance: distance,
-      completedAdaptation: adaptation ?? null,
+      completedDuration: duration,
+      completedIntensity: intensity,
+      completedAdaptation: adaptation ? cleanAdaptation(adaptation) : null,
     });
   };
 
   const updateCompletedWorkout = async (
     workout: PlannedWorkout,
     distance: number,
+    duration: number,
+    intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => {
     if (!user) return;
@@ -219,7 +237,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
         'workouts',
         workout.workoutDocId,
       );
-      await updateDoc(workoutRef, buildWorkoutData(workout, distance));
+      await updateDoc(workoutRef, buildWorkoutData(workout, distance, duration, intensity));
     }
 
     if (adaptation) {
@@ -251,7 +269,9 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
     await updateDoc(ref, {
       completedDistance: distance,
-      completedAdaptation: adaptation ?? null,
+      completedDuration: duration,
+      completedIntensity: intensity,
+      completedAdaptation: adaptation ? cleanAdaptation(adaptation) : null,
     });
   };
 

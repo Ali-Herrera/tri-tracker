@@ -9,6 +9,7 @@ import {
   writeBatch,
   doc,
   getDocs,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './useAuth';
@@ -113,5 +114,10 @@ export function useWorkouts() {
     }
   };
 
-  return { workouts, loading, addWorkout, addWorkoutsBatch, deleteAllWorkouts };
+  const deleteWorkout = async (id: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, 'users', user.uid, 'workouts', id));
+  };
+
+  return { workouts, loading, addWorkout, addWorkoutsBatch, deleteAllWorkouts, deleteWorkout };
 }
