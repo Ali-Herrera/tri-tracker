@@ -7,11 +7,9 @@ import {
   doc,
   getDocs,
   onSnapshot,
-  query,
   serverTimestamp,
   setDoc,
   updateDoc,
-  where,
 } from 'firebase/firestore';
 import { usePlannedWorkoutActions } from '../hooks/usePlannedWorkoutActions';
 import { useAuth } from '../hooks/useAuth';
