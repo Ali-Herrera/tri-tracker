@@ -5,10 +5,13 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import { usePlannedWorkoutActions } from '../hooks/usePlannedWorkoutActions';
 import { useAuth } from '../hooks/useAuth';
@@ -50,6 +53,7 @@ export default function References() {
   const { user } = useAuth();
   const { addPlannedWorkout } = usePlannedWorkoutActions();
   const [saveStatus, setSaveStatus] = useState('');
+  const [importing, setImporting] = useState(false);
   const [loading, setLoading] = useState(true);
   const loadedRef = useRef(false);
   const [planDate, setPlanDate] = useState(() =>
@@ -84,8 +88,13 @@ export default function References() {
   useEffect(() => {
     if (!docRef) return;
     const unsubscribe = onSnapshot(docRef, (snap) => {
+      // Only hydrate state from Firestore on the initial load.
+      // After that, local state is authoritative — re-applying the snapshot
+      // after each save would trigger the save effect again (infinite loop).
+      if (loadedRef.current) return;
       if (!snap.exists()) {
         setLoading(false);
+        loadedRef.current = true;
         return;
       }
       const data = snap.data() as {
@@ -205,6 +214,43 @@ export default function References() {
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleImportFromCalendar = async () => {
+    if (!user) return;
+    setImporting(true);
+    try {
+      const plannedSnap = await getDocs(
+        collection(db, 'users', user.uid, 'plannedWorkouts'),
+      );
+      const libraryRef = collection(db, 'users', user.uid, 'referenceWorkouts');
+      const librarySnap = await getDocs(libraryRef);
+      const existingTitles = new Set(
+        librarySnap.docs.map((d) => (d.data().title as string) ?? ''),
+      );
+      const seen = new Set<string>();
+      const toAdd = plannedSnap.docs.filter((d) => {
+        const title = ((d.data().title as string) ?? '').trim();
+        if (!title || existingTitles.has(title) || seen.has(title)) return false;
+        seen.add(title);
+        return true;
+      });
+      await Promise.all(
+        toAdd.map((d) => {
+          const data = d.data();
+          return addDoc(libraryRef, {
+            sport: data.sport,
+            title: (data.title as string).trim(),
+            notes: data.notes ?? '',
+            easyMinutes: data.easyMinutes ?? 0,
+            hardMinutes: data.hardMinutes ?? 0,
+            createdAt: serverTimestamp(),
+          });
+        }),
+      );
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleRemoveUpload = async (uploadId: string) => {
@@ -373,7 +419,7 @@ export default function References() {
     <div className='dashboard'>
       <div className='page-header'>
         <h1>References</h1>
-        {saveStatus && <span className='success-text'>{saveStatus}</span>}
+        <span className='success-text' style={{ visibility: saveStatus ? 'visible' : 'hidden' }}>{saveStatus || 'Saved!'}</span>
       </div>
 
       <section className='ref-grid'>
@@ -519,14 +565,24 @@ export default function References() {
       <section className='ref-card'>
         <div className='page-header'>
           <h2>Workout Library</h2>
-          <label className='ref-date'>
-            Plan Date
-            <input
-              type='date'
-              value={planDate}
-              onChange={(e) => setPlanDate(e.target.value)}
-            />
-          </label>
+          <div className='ref-section-actions'>
+            <button
+              type='button'
+              className='filter-btn'
+              onClick={handleImportFromCalendar}
+              disabled={importing}
+            >
+              {importing ? 'Importing...' : 'Import from Calendar'}
+            </button>
+            <label className='ref-date'>
+              Plan Date
+              <input
+                type='date'
+                value={planDate}
+                onChange={(e) => setPlanDate(e.target.value)}
+              />
+            </label>
+          </div>
         </div>
         <div className='ref-library'>
           <div className='ref-template-form'>

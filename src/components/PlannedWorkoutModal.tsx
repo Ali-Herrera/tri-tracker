@@ -45,14 +45,12 @@ interface Props {
   onComplete: (
     workout: PlannedWorkout,
     distance: number,
-    duration: number,
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
   onUpdateCompleted: (
     workout: PlannedWorkout,
     distance: number,
-    duration: number,
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
@@ -81,7 +79,6 @@ export default function PlannedWorkoutModal({
   const [submitting, setSubmitting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [distance, setDistance] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [intensity, setIntensity] = useState(5);
   const [adaptationType, setAdaptationType] = useState(
     ADAPTATION_OPTIONS.Bike[0],
@@ -98,12 +95,6 @@ export default function PlannedWorkoutModal({
     if (!isOpen) return;
     setCompleting(false);
     setDistance(existingWorkout?.completedDistance ?? 0);
-    setDuration(
-      existingWorkout?.completedDuration ??
-        (existingWorkout
-          ? existingWorkout.easyMinutes + existingWorkout.hardMinutes
-          : 30),
-    );
     setIntensity(existingWorkout?.completedIntensity ?? 5);
     if (existingWorkout) {
       setDate(existingWorkout.date);
@@ -224,10 +215,10 @@ export default function PlannedWorkoutModal({
             swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
-      await onComplete(existingWorkout, distance, duration, intensity, adaptationInput);
+      await onComplete(existingWorkout, distance, intensity, adaptationInput);
+      onClose();
     } finally {
       setSubmitting(false);
-      onClose();
     }
   };
 
@@ -248,10 +239,10 @@ export default function PlannedWorkoutModal({
             swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
-      await onUpdateCompleted(existingWorkout, distance, duration, intensity, adaptationInput);
+      await onUpdateCompleted(existingWorkout, distance, intensity, adaptationInput);
+      onClose();
     } finally {
       setSubmitting(false);
-      onClose();
     }
   };
 
@@ -336,7 +327,6 @@ export default function PlannedWorkoutModal({
                 value={hardMinutes || ''}
                 placeholder='0'
                 onChange={(e) => setHardMinutes(Number(e.target.value) || 0)}
-                required
               />
             </label>
           </div>
@@ -368,19 +358,7 @@ export default function PlannedWorkoutModal({
               {!existingWorkout.completed && completing && (
                 <div className='complete-prompt'>
                   <label>
-                    Duration (min)
-                    <input
-                      type='number'
-                      min={0}
-                      step={1}
-                      value={duration || ''}
-                      placeholder='0'
-                      onChange={(e) => setDuration(Number(e.target.value) || 0)}
-                      autoFocus
-                    />
-                  </label>
-                  <label>
-                    Distance ({sport === 'Swim' ? 'yd' : 'miles'})
+                    Distance ({sport === 'Swim' ? 'yards' : 'miles'})
                     <input
                       type='number'
                       min={0}
@@ -388,6 +366,7 @@ export default function PlannedWorkoutModal({
                       value={distance || ''}
                       placeholder='0'
                       onChange={(e) => setDistance(Number(e.target.value) || 0)}
+                      autoFocus
                     />
                   </label>
                   <label>
@@ -505,7 +484,9 @@ export default function PlannedWorkoutModal({
                           min={1}
                           value={avgHr || ''}
                           placeholder='0'
-                          onChange={(e) => setAvgHr(Number(e.target.value) || 0)}
+                          onChange={(e) =>
+                            setAvgHr(Number(e.target.value) || 0)
+                          }
                           required
                         />
                       </label>
@@ -520,7 +501,8 @@ export default function PlannedWorkoutModal({
                           placeholder='0'
                           onChange={(e) => {
                             const v = Number(e.target.value);
-                            if (e.target.value === '' || Number.isFinite(v)) setDrift(v || 0);
+                            if (e.target.value === '' || Number.isFinite(v))
+                              setDrift(v || 0);
                           }}
                         />
                       </label>
@@ -556,19 +538,7 @@ export default function PlannedWorkoutModal({
               {existingWorkout.completed && completing && (
                 <div className='complete-prompt'>
                   <label>
-                    Duration (min)
-                    <input
-                      type='number'
-                      min={0}
-                      step={1}
-                      value={duration || ''}
-                      placeholder='0'
-                      onChange={(e) => setDuration(Number(e.target.value) || 0)}
-                      autoFocus
-                    />
-                  </label>
-                  <label>
-                    Distance ({sport === 'Swim' ? 'yd' : 'miles'})
+                    Distance ({sport === 'Swim' ? 'yards' : 'miles'})
                     <input
                       type='number'
                       min={0}
@@ -576,6 +546,7 @@ export default function PlannedWorkoutModal({
                       value={distance || ''}
                       placeholder='0'
                       onChange={(e) => setDistance(Number(e.target.value) || 0)}
+                      autoFocus
                     />
                   </label>
                   <label>
@@ -693,7 +664,9 @@ export default function PlannedWorkoutModal({
                           min={1}
                           value={avgHr || ''}
                           placeholder='0'
-                          onChange={(e) => setAvgHr(Number(e.target.value) || 0)}
+                          onChange={(e) =>
+                            setAvgHr(Number(e.target.value) || 0)
+                          }
                           required
                         />
                       </label>

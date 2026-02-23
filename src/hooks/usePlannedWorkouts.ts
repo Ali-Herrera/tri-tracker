@@ -5,10 +5,12 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDocs,
   onSnapshot,
   query,
   where,
   orderBy,
+  serverTimestamp,
   Timestamp,
   writeBatch,
 } from 'firebase/firestore';
@@ -92,6 +94,23 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
       collection(db, 'users', user.uid, 'plannedWorkouts'),
       buildPlannedPayload(workout),
     );
+    // Auto-save to workout library if no entry with this title exists yet
+    if (workout.title.trim()) {
+      const libraryRef = collection(db, 'users', user.uid, 'referenceWorkouts');
+      const existing = await getDocs(
+        query(libraryRef, where('title', '==', workout.title.trim())),
+      );
+      if (existing.empty) {
+        await addDoc(libraryRef, {
+          sport: workout.sport,
+          title: workout.title.trim(),
+          notes: workout.notes,
+          easyMinutes: workout.easyMinutes,
+          hardMinutes: workout.hardMinutes,
+          createdAt: serverTimestamp(),
+        });
+      }
+    }
   };
 
   const updatePlannedWorkout = async (
@@ -136,10 +155,10 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
   const buildWorkoutData = (
     workout: PlannedWorkout,
     distance: number,
-    duration: number,
     intensity: number,
   ) => {
     const sport = SPORT_MAP[workout.sport] || 'Strength';
+    const duration = workout.easyMinutes + workout.hardMinutes;
     return {
       date: Timestamp.fromDate(new Date(workout.date + 'T12:00:00')),
       sport,
@@ -189,7 +208,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
   const completePlannedWorkout = async (
     workout: PlannedWorkout,
     distance: number,
-    duration: number,
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => {
@@ -198,7 +216,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
     const workoutDoc = await addDoc(
       collection(db, 'users', user.uid, 'workouts'),
-      buildWorkoutData(workout, distance, duration, intensity),
+      buildWorkoutData(workout, distance, intensity),
     );
 
     let adaptationDocId: string | undefined;
@@ -215,7 +233,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
       workoutDocId: workoutDoc.id,
       adaptationDocId: adaptationDocId ?? null,
       completedDistance: distance,
-      completedDuration: duration,
       completedIntensity: intensity,
       completedAdaptation: adaptation ? cleanAdaptation(adaptation) : null,
     });
@@ -224,7 +241,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
   const updateCompletedWorkout = async (
     workout: PlannedWorkout,
     distance: number,
-    duration: number,
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => {
@@ -239,7 +255,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
         'workouts',
         workout.workoutDocId,
       );
-      await updateDoc(workoutRef, buildWorkoutData(workout, distance, duration, intensity));
+      await updateDoc(workoutRef, buildWorkoutData(workout, distance, intensity));
     }
 
     if (adaptation) {
@@ -271,7 +287,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
 
     await updateDoc(ref, {
       completedDistance: distance,
-      completedDuration: duration,
       completedIntensity: intensity,
       completedAdaptation: adaptation ? cleanAdaptation(adaptation) : null,
     });
