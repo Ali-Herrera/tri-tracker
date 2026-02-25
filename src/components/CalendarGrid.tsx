@@ -278,8 +278,8 @@ export default function CalendarGrid({
   const days = useMemo(() => {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
-    const calStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
     return eachDayOfInterval({ start: calStart, end: calEnd });
   }, [month]);
 
@@ -293,7 +293,7 @@ export default function CalendarGrid({
 
   const dayHeaders = useMemo(() => {
     if (weekMode === 7) {
-      return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     }
     return Array.from({ length: 9 }, (_, i) => `Day ${i + 1}`);
   }, [weekMode]);

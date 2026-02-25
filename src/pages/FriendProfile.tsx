@@ -46,8 +46,8 @@ export default function FriendProfile() {
   const { queryStart, queryEnd } = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
-    const calStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
     return {
       queryStart: format(calStart, 'yyyy-MM-dd'),
       queryEnd: format(calEnd, 'yyyy-MM-dd'),
