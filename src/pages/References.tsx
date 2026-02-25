@@ -7,9 +7,12 @@ import {
   doc,
   getDocs,
   onSnapshot,
+  query,
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
 import { usePlannedWorkoutActions } from '../hooks/usePlannedWorkoutActions';
 import { useAuth } from '../hooks/useAuth';
@@ -320,17 +323,45 @@ export default function References() {
   const handleSaveEdit = async () => {
     if (!user || !editingTemplateId || !editingTemplate) return;
     if (!editingTemplate.title.trim()) return;
+
+    const originalTitle = templates.find((t) => t.id === editingTemplateId)?.title ?? '';
+    const newTitle = editingTemplate.title.trim();
+
     await updateDoc(
       doc(db, 'users', user.uid, 'referenceWorkouts', editingTemplateId),
       {
         sport: editingTemplate.sport,
-        title: editingTemplate.title.trim(),
+        title: newTitle,
         notes: editingTemplate.notes,
         easyMinutes: editingTemplate.easyMinutes,
         hardMinutes: editingTemplate.hardMinutes,
         updatedAt: serverTimestamp(),
       },
     );
+
+    // Cascade changes to all planned workouts with the same title
+    if (originalTitle) {
+      const snap = await getDocs(
+        query(
+          collection(db, 'users', user.uid, 'plannedWorkouts'),
+          where('title', '==', originalTitle),
+        ),
+      );
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        for (const d of snap.docs) {
+          batch.update(d.ref, {
+            sport: editingTemplate.sport,
+            title: newTitle,
+            notes: editingTemplate.notes,
+            easyMinutes: editingTemplate.easyMinutes,
+            hardMinutes: editingTemplate.hardMinutes,
+          });
+        }
+        await batch.commit();
+      }
+    }
+
     setEditingTemplateId(null);
     setEditingTemplate(null);
   };
