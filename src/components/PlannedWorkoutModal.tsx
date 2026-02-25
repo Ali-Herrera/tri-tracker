@@ -54,6 +54,7 @@ interface Props {
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
+  onUpdateLibrary: (workout: { sport: string; title: string; notes: string; easyMinutes: number; hardMinutes: number }) => Promise<void>;
   initialDate: string;
   existingWorkout: PlannedWorkout | null;
 }
@@ -67,6 +68,7 @@ export default function PlannedWorkoutModal({
   onCopy,
   onComplete,
   onUpdateCompleted,
+  onUpdateLibrary,
   initialDate,
   existingWorkout,
 }: Props) {
@@ -178,6 +180,16 @@ export default function PlannedWorkoutModal({
     try {
       await onDelete(existingWorkout.id);
       onClose();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleUpdateLibrary = async () => {
+    if (!isEditing) return;
+    setSubmitting(true);
+    try {
+      await onUpdateLibrary({ sport, title: title.trim(), notes: notes.trim(), easyMinutes, hardMinutes });
     } finally {
       setSubmitting(false);
     }
@@ -342,6 +354,17 @@ export default function PlannedWorkoutModal({
                 ? 'Update Workout'
                 : 'Add Workout'}
           </button>
+
+          {isEditing && (
+            <button
+              type='button'
+              className='filter-btn'
+              onClick={handleUpdateLibrary}
+              disabled={submitting}
+            >
+              Update Library
+            </button>
+          )}
 
           {isEditing && (
             <div className='modal-actions'>

@@ -292,6 +292,37 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     });
   };
 
+  const updateLibraryWorkout = async (workout: {
+    sport: string;
+    title: string;
+    notes: string;
+    easyMinutes: number;
+    hardMinutes: number;
+  }) => {
+    if (!user || !workout.title.trim()) return;
+    const libraryRef = collection(db, 'users', user.uid, 'referenceWorkouts');
+    const existing = await getDocs(
+      query(libraryRef, where('title', '==', workout.title.trim())),
+    );
+    if (!existing.empty) {
+      await updateDoc(existing.docs[0].ref, {
+        sport: workout.sport,
+        notes: workout.notes,
+        easyMinutes: workout.easyMinutes,
+        hardMinutes: workout.hardMinutes,
+      });
+    } else {
+      await addDoc(libraryRef, {
+        sport: workout.sport,
+        title: workout.title.trim(),
+        notes: workout.notes,
+        easyMinutes: workout.easyMinutes,
+        hardMinutes: workout.hardMinutes,
+        createdAt: serverTimestamp(),
+      });
+    }
+  };
+
   return {
     workouts,
     loading,
@@ -302,5 +333,6 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
     copyPlannedWorkout,
     completePlannedWorkout,
     updateCompletedWorkout,
+    updateLibraryWorkout,
   };
 }

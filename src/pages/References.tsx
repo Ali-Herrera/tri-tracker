@@ -672,164 +672,192 @@ export default function References() {
             </button>
           </div>
 
-          <div className='ref-templates'>
-            {templates.map((template) => (
-              <div key={template.id} className='ref-template-card'>
-                {editingTemplateId === template.id && editingTemplate ? (
-                  <>
-                    <label>
-                      Sport
-                      <select
-                        value={editingTemplate.sport}
-                        onChange={(e) =>
-                          setEditingTemplate((prev) =>
-                            prev
-                              ? {
-                                  ...prev,
-                                  sport: e.target.value as CalendarSport,
+          <div className='ref-library-columns'>
+            {SPORTS.map((sport) => {
+              const sportTemplates = templates.filter(
+                (t) => t.sport === sport,
+              );
+              return (
+                <div key={sport} className='ref-sport-column'>
+                  <p className='ref-sport-heading'>{sport}</p>
+                  <div className='ref-sport-cards'>
+                    {sportTemplates.map((template) => (
+                      <div key={template.id} className='ref-template-card'>
+                        {editingTemplateId === template.id &&
+                        editingTemplate ? (
+                          <>
+                            <label>
+                              Sport
+                              <select
+                                value={editingTemplate.sport}
+                                onChange={(e) =>
+                                  setEditingTemplate((prev) =>
+                                    prev
+                                      ? {
+                                          ...prev,
+                                          sport: e.target
+                                            .value as CalendarSport,
+                                        }
+                                      : prev,
+                                  )
                                 }
-                              : prev,
-                          )
-                        }
-                      >
-                        {SPORTS.map((sport) => (
-                          <option key={sport} value={sport}>
-                            {sport}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Title
-                      <input
-                        type='text'
-                        value={editingTemplate.title}
-                        onChange={(e) =>
-                          setEditingTemplate((prev) =>
-                            prev ? { ...prev, title: e.target.value } : prev,
-                          )
-                        }
-                      />
-                    </label>
-                    <label>
-                      Notes
-                      <textarea
-                        className='modal-textarea'
-                        rows={3}
-                        value={editingTemplate.notes}
-                        onChange={(e) =>
-                          setEditingTemplate((prev) =>
-                            prev ? { ...prev, notes: e.target.value } : prev,
-                          )
-                        }
-                      />
-                    </label>
-                    <div className='pace-row'>
-                      <label>
-                        Easy Minutes
-                        <input
-                          type='number'
-                          min={0}
-                          value={editingTemplate.easyMinutes || ''}
-                          placeholder='0'
-                          onChange={(e) =>
-                            setEditingTemplate((prev) =>
-                              prev
-                                ? {
-                                    ...prev,
-                                    easyMinutes: Number(e.target.value) || 0,
+                              >
+                                {SPORTS.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <label>
+                              Title
+                              <input
+                                type='text'
+                                value={editingTemplate.title}
+                                onChange={(e) =>
+                                  setEditingTemplate((prev) =>
+                                    prev
+                                      ? { ...prev, title: e.target.value }
+                                      : prev,
+                                  )
+                                }
+                              />
+                            </label>
+                            <label>
+                              Notes
+                              <textarea
+                                className='modal-textarea'
+                                rows={3}
+                                value={editingTemplate.notes}
+                                onChange={(e) =>
+                                  setEditingTemplate((prev) =>
+                                    prev
+                                      ? { ...prev, notes: e.target.value }
+                                      : prev,
+                                  )
+                                }
+                              />
+                            </label>
+                            <div className='pace-row'>
+                              <label>
+                                Easy Minutes
+                                <input
+                                  type='number'
+                                  min={0}
+                                  value={editingTemplate.easyMinutes || ''}
+                                  placeholder='0'
+                                  onChange={(e) =>
+                                    setEditingTemplate((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            easyMinutes:
+                                              Number(e.target.value) || 0,
+                                          }
+                                        : prev,
+                                    )
                                   }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
-                      <label>
-                        Hard Minutes
-                        <input
-                          type='number'
-                          min={0}
-                          value={editingTemplate.hardMinutes || ''}
-                          placeholder='0'
-                          onChange={(e) =>
-                            setEditingTemplate((prev) =>
-                              prev
-                                ? {
-                                    ...prev,
-                                    hardMinutes: Number(e.target.value) || 0,
+                                />
+                              </label>
+                              <label>
+                                Hard Minutes
+                                <input
+                                  type='number'
+                                  min={0}
+                                  value={editingTemplate.hardMinutes || ''}
+                                  placeholder='0'
+                                  onChange={(e) =>
+                                    setEditingTemplate((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            hardMinutes:
+                                              Number(e.target.value) || 0,
+                                          }
+                                        : prev,
+                                    )
                                   }
-                                : prev,
-                            )
-                          }
-                        />
-                      </label>
-                    </div>
-                    <div className='ref-template-actions'>
-                      <button
-                        type='button'
-                        className='filter-btn'
-                        onClick={handleSaveEdit}
-                      >
-                        Save
-                      </button>
-                      <button
-                        type='button'
-                        className='filter-btn'
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type='button'
-                        className='filter-btn'
-                        onClick={() => handleDeleteTemplate(template.id)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <strong>{template.title}</strong>
-                      <div className='muted'>
-                        {template.sport} ·{' '}
-                        {template.easyMinutes + template.hardMinutes} min
+                                />
+                              </label>
+                            </div>
+                            <div className='ref-template-actions'>
+                              <button
+                                type='button'
+                                className='filter-btn'
+                                onClick={handleSaveEdit}
+                              >
+                                Save
+                              </button>
+                              <button
+                                type='button'
+                                className='filter-btn'
+                                onClick={handleCancelEdit}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type='button'
+                                className='filter-btn'
+                                onClick={() =>
+                                  handleDeleteTemplate(template.id)
+                                }
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div>
+                              <strong>{template.title}</strong>
+                              <div className='muted'>
+                                {template.easyMinutes + template.hardMinutes}{' '}
+                                min
+                              </div>
+                            </div>
+                            <p className='ref-template-notes'>
+                              {template.notes}
+                            </p>
+                            <div className='ref-template-actions'>
+                              <button
+                                type='button'
+                                className={`filter-btn ${addedIds.has(template.id) ? 'filter-btn-success' : ''}`}
+                                onClick={() => handleCopyTemplate(template)}
+                              >
+                                {addedIds.has(template.id)
+                                  ? 'Added!'
+                                  : 'Add to Calendar'}
+                              </button>
+                              <button
+                                type='button'
+                                className='filter-btn'
+                                onClick={() => handleEditTemplate(template)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type='button'
+                                className='filter-btn'
+                                onClick={() =>
+                                  handleDeleteTemplate(template.id)
+                                }
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </div>
-                    <p className='ref-template-notes'>{template.notes}</p>
-                    <div className='ref-template-actions'>
-                      <button
-                        type='button'
-                        className={`filter-btn ${addedIds.has(template.id) ? 'filter-btn-success' : ''}`}
-                        onClick={() => handleCopyTemplate(template)}
-                      >
-                        {addedIds.has(template.id)
-                          ? 'Added!'
-                          : 'Add to Calendar'}
-                      </button>
-                      <button
-                        type='button'
-                        className='filter-btn'
-                        onClick={() => handleEditTemplate(template)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type='button'
-                        className='filter-btn'
-                        onClick={() => handleDeleteTemplate(template.id)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-            {!loading && templates.length === 0 && (
-              <p className='muted'>No saved workouts yet.</p>
-            )}
+                    ))}
+                    {!loading && sportTemplates.length === 0 && (
+                      <p className='muted' style={{ fontSize: '0.8rem' }}>
+                        No workouts yet.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

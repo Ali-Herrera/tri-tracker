@@ -480,10 +480,40 @@ body {
   border-radius: 6px;
 }
 
-.ref-templates {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+.ref-library-columns {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.ref-sport-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.ref-sport-heading {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--border);
+  margin: 0;
+}
+
+.ref-sport-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ref-sport-cards .ref-template-card {
+  flex: 0 0 200px;
 }
 
 .ref-template-card {
