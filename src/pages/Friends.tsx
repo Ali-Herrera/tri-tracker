@@ -1,8 +1,159 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import {
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  serverTimestamp,
+  where,
+} from 'firebase/firestore';
 import { Link } from 'react-router-dom';
+import { db } from '../firebase';
+import { useAuth } from '../hooks/useAuth';
 import { useFriends } from '../hooks/useFriends';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { usePublicProfiles } from '../hooks/usePublicProfiles';
+import {
+  useUserWorkoutLibrary,
+  type LibraryWorkout,
+} from '../hooks/useUserWorkoutLibrary';
+
+const SPORTS = ['Swim', 'Bike', 'Run', 'Lift', 'Other'] as const;
+
+function FriendLibraryPanel({ friendUid }: { friendUid: string }) {
+  const { user } = useAuth();
+  const { library, loading } = useUserWorkoutLibrary(friendUid);
+  const [calendarWorkoutId, setCalendarWorkoutId] = useState<string | null>(null);
+  const [calendarDate, setCalendarDate] = useState(() =>
+    format(new Date(), 'yyyy-MM-dd'),
+  );
+  const [feedback, setFeedback] = useState<Record<string, string>>({});
+
+  const showFeedback = (key: string, msg: string) => {
+    setFeedback((prev) => ({ ...prev, [key]: msg }));
+    setTimeout(() => {
+      setFeedback((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }, 2000);
+  };
+
+  const handleCopyToLibrary = async (w: LibraryWorkout) => {
+    if (!user) return;
+    const libraryRef = collection(db, 'users', user.uid, 'referenceWorkouts');
+    const existing = await getDocs(
+      query(libraryRef, where('title', '==', w.title)),
+    );
+    if (!existing.empty) {
+      showFeedback(w.id + '-lib', 'Already saved');
+      return;
+    }
+    await addDoc(libraryRef, {
+      sport: w.sport,
+      title: w.title,
+      notes: w.notes,
+      easyMinutes: w.easyMinutes,
+      hardMinutes: w.hardMinutes,
+      createdAt: serverTimestamp(),
+    });
+    showFeedback(w.id + '-lib', 'Copied!');
+  };
+
+  const handleAddToCalendar = async (w: LibraryWorkout) => {
+    if (!user) return;
+    await addDoc(collection(db, 'users', user.uid, 'plannedWorkouts'), {
+      date: calendarDate,
+      sport: w.sport,
+      title: w.title,
+      notes: w.notes,
+      easyMinutes: w.easyMinutes,
+      hardMinutes: w.hardMinutes,
+      completed: false,
+    });
+    showFeedback(w.id + '-cal', 'Added!');
+    setCalendarWorkoutId(null);
+  };
+
+  if (loading) return <p className='muted'>Loading library...</p>;
+  if (library.length === 0) return <p className='muted'>No workouts in library yet.</p>;
+
+  return (
+    <div className='friend-library'>
+      <div className='ref-library-columns'>
+        {SPORTS.map((sport) => {
+          const sportWorkouts = library.filter((w) => w.sport === sport);
+          if (sportWorkouts.length === 0) return null;
+          return (
+            <div key={sport} className='ref-sport-column'>
+              <p className='ref-sport-heading'>{sport}</p>
+              <div className='ref-sport-cards'>
+                {sportWorkouts.map((w) => (
+                  <div key={w.id} className='ref-template-card'>
+                    <div>
+                      <strong>{w.title}</strong>
+                      <div className='muted'>
+                        {w.easyMinutes + w.hardMinutes} min
+                      </div>
+                    </div>
+                    {w.notes && (
+                      <p className='ref-template-notes'>{w.notes}</p>
+                    )}
+                    {calendarWorkoutId === w.id && (
+                      <div className='friend-lib-cal-row'>
+                        <input
+                          type='date'
+                          value={calendarDate}
+                          onChange={(e) => setCalendarDate(e.target.value)}
+                        />
+                        <div className='ref-template-actions'>
+                          <button
+                            type='button'
+                            className='filter-btn'
+                            onClick={() => handleAddToCalendar(w)}
+                          >
+                            {feedback[w.id + '-cal'] || 'Confirm'}
+                          </button>
+                          <button
+                            type='button'
+                            className='filter-btn'
+                            onClick={() => setCalendarWorkoutId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <div className='ref-template-actions'>
+                      <button
+                        type='button'
+                        className='filter-btn'
+                        onClick={() => handleCopyToLibrary(w)}
+                      >
+                        {feedback[w.id + '-lib'] || 'Copy to My Library'}
+                      </button>
+                      {calendarWorkoutId !== w.id && (
+                        <button
+                          type='button'
+                          className='filter-btn'
+                          onClick={() => setCalendarWorkoutId(w.id)}
+                        >
+                          Add to Calendar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function Friends() {
   const {
@@ -33,6 +184,7 @@ export default function Friends() {
   const [email, setEmail] = useState('');
   const [requestError, setRequestError] = useState('');
   const [requestSuccess, setRequestSuccess] = useState('');
+  const [expandedLibraryId, setExpandedLibraryId] = useState<string | null>(null);
 
   const profileIds = useMemo(() => {
     return [
@@ -124,34 +276,48 @@ export default function Friends() {
           const friendProfile = profiles[friend.uid];
           const name =
             friendProfile?.displayName || friendProfile?.email || friend.uid;
+          const isExpanded = expandedLibraryId === friend.uid;
           return (
             <div key={friend.uid} className='friend-card'>
-              <div className='friend-card-main'>
-                <div className='friend-avatar'>
-                  {friendProfile?.avatarUrl ? (
-                    <img src={friendProfile.avatarUrl} alt={name} />
-                  ) : (
-                    <span>{name.slice(0, 1).toUpperCase()}</span>
-                  )}
+              <div className='friend-card-top'>
+                <div className='friend-card-main'>
+                  <div className='friend-avatar'>
+                    {friendProfile?.avatarUrl ? (
+                      <img src={friendProfile.avatarUrl} alt={name} />
+                    ) : (
+                      <span>{name.slice(0, 1).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <strong>{name}</strong>
+                    {friendProfile?.bio && (
+                      <div className='muted friend-meta'>{friendProfile.bio}</div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <strong>{name}</strong>
-                  {friendProfile?.bio && (
-                    <div className='muted friend-meta'>{friendProfile.bio}</div>
-                  )}
+                <div className='friend-actions'>
+                  <Link className='filter-btn' to={`/friends/${friend.uid}`}>
+                    View Profile
+                  </Link>
+                  <button
+                    className={`filter-btn${isExpanded ? ' active' : ''}`}
+                    onClick={() =>
+                      setExpandedLibraryId(isExpanded ? null : friend.uid)
+                    }
+                  >
+                    {isExpanded ? 'Hide Library' : 'View Library'}
+                  </button>
+                  <button
+                    className='filter-btn'
+                    onClick={() => removeFriend(friend.uid)}
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
-              <div className='friend-actions'>
-                <Link className='filter-btn' to={`/friends/${friend.uid}`}>
-                  View Profile
-                </Link>
-                <button
-                  className='filter-btn'
-                  onClick={() => removeFriend(friend.uid)}
-                >
-                  Remove
-                </button>
-              </div>
+              {isExpanded && (
+                <FriendLibraryPanel friendUid={friend.uid} />
+              )}
             </div>
           );
         })}

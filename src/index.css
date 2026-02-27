@@ -260,13 +260,31 @@ body {
 .friend-row,
 .friend-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+}
+
+.friend-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.friend-library {
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.friend-lib-cal-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
 }
 
 .friend-card-main {
