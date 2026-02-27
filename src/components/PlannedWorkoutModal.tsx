@@ -262,7 +262,10 @@ export default function PlannedWorkoutModal({
     <div className='modal-overlay' onClick={onClose}>
       <div className='modal-card' onClick={(e) => e.stopPropagation()}>
         <form className='workout-form' onSubmit={handleSubmit}>
-          <h3>{isEditing ? 'Edit Planned Workout' : 'Plan a Workout'}</h3>
+          <div className='modal-header'>
+            <h3>{isEditing ? 'Edit Planned Workout' : 'Plan a Workout'}</h3>
+            <button type='button' className='modal-close-btn' onClick={onClose} aria-label='Close'>&#x2715;</button>
+          </div>
 
           <label>
             Date

@@ -1155,6 +1155,33 @@ section {
 }
 
 /* Modal */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  border-radius: var(--radius);
+}
+
+.modal-close-btn:hover {
+  color: var(--text);
+  background: var(--border);
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
