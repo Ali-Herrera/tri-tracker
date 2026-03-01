@@ -3,11 +3,11 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   Legend,
   ResponsiveContainer,
   Line,
   ComposedChart,
+  Tooltip,
 } from "recharts";
 import { startOfWeek, format } from "date-fns";
 import type { Workout } from "../types";
@@ -19,9 +19,71 @@ const COLORS: Record<string, string> = {
   Strength: "#AB63FA",
 };
 
+const SPORTS = ["Swim", "Bike", "Run", "Strength"] as const;
+
 interface Props {
   workouts: Workout[];
   timeFrame: string;
+}
+
+interface TooltipPayloadItem {
+  dataKey: string;
+  value: number;
+  payload: Record<string, number>;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  label?: string;
+  payload?: TooltipPayloadItem[];
+}
+
+function CustomTooltip({ active, label, payload }: CustomTooltipProps) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  // payload[0].payload is the full original data row, including non-rendered fields
+  const row = payload[0].payload;
+  const dataPoint = payload.reduce<Record<string, number>>((acc, p) => {
+    acc[p.dataKey] = p.value;
+    return acc;
+  }, {});
+
+  const total = row["total"] ?? 0;
+  const trend = row["trend"] ?? 0;
+
+  return (
+    <div style={{
+      background: "#1e1e2e",
+      border: "1px solid #333",
+      borderRadius: 6,
+      padding: "0.6rem 0.9rem",
+      color: "#e0e0e0",
+      fontSize: "0.85rem",
+      minWidth: 160,
+    }}>
+      <p style={{ color: "#fff", fontWeight: 600, marginBottom: "0.4rem" }}>{label}</p>
+      {SPORTS.map((sport) => {
+        const val = dataPoint[sport];
+        if (!val) return null;
+        return (
+          <div key={sport} style={{ display: "flex", justifyContent: "space-between", gap: "1.5rem", color: COLORS[sport] }}>
+            <span>{sport}</span>
+            <span>{val} hrs</span>
+          </div>
+        );
+      })}
+      <div style={{ borderTop: "1px solid #444", marginTop: "0.4rem", paddingTop: "0.4rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1.5rem", color: "#fff", fontWeight: 600 }}>
+          <span>Week Total</span>
+          <span>{total} hrs</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "1.5rem", color: "#aaa" }}>
+          <span>4-Week Avg</span>
+          <span>{trend} hrs</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
@@ -53,7 +115,7 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
         trend: 0,
       }));
 
-    // Compute 4-week rolling avg
+    // 4-week rolling average
     for (let i = 0; i < rows.length; i++) {
       const start = Math.max(0, i - 3);
       const slice = rows.slice(start, i + 1);
@@ -72,13 +134,8 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
         <ComposedChart data={data}>
           <XAxis dataKey="week" tick={{ fill: "#aaa", fontSize: 12 }} />
           <YAxis tick={{ fill: "#aaa", fontSize: 12 }} label={{ value: "Hours", angle: -90, position: "insideLeft", fill: "#aaa" }} />
-          <Tooltip
-            contentStyle={{ background: "#1e1e2e", border: "1px solid #333", color: "#e0e0e0" }}
-            itemStyle={{ color: "#e0e0e0" }}
-            labelStyle={{ color: "#fff" }}
-            formatter={(value) => `${value} hrs`}
-          />
-          <Legend />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend formatter={(value) => value === "trend" ? "4-Week Avg" : value} />
           <Bar dataKey="Swim" stackId="a" fill={COLORS.Swim} />
           <Bar dataKey="Bike" stackId="a" fill={COLORS.Bike} />
           <Bar dataKey="Run" stackId="a" fill={COLORS.Run} />
@@ -86,11 +143,11 @@ export default function WeeklyVolumeChart({ workouts, timeFrame }: Props) {
           <Line
             type="monotone"
             dataKey="trend"
-            name="4-Week Avg"
+            name="trend"
             stroke="#fff"
             strokeWidth={2}
             strokeDasharray="5 5"
-            dot={true}
+            dot={false}
           />
         </ComposedChart>
       </ResponsiveContainer>
