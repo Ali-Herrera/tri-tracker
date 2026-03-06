@@ -3,7 +3,6 @@ import { subDays } from 'date-fns';
 import { useWorkouts } from '../hooks/useWorkouts';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import type { TimeFrame } from '../types';
-import WorkoutForm from '../components/WorkoutForm';
 import RaceCountdown from '../components/RaceCountdown';
 import CoachAnalysis from '../components/CoachAnalysis';
 import SeasonTotals from '../components/SeasonTotals';
@@ -79,8 +78,6 @@ export default function Dashboard() {
       <RaceCountdown />
 
       <CoachAnalysis workouts={filtered} />
-
-      <WorkoutForm />
 
       <SeasonTotals workouts={workouts} />
 

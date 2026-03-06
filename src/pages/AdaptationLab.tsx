@@ -1,5 +1,4 @@
 import { useAdaptation } from "../hooks/useAdaptation";
-import AdaptationForm from "../components/AdaptationForm";
 import WeeklyReport from "../components/WeeklyReport";
 import StatusTable from "../components/StatusTable";
 import TrendCharts from "../components/TrendCharts";
@@ -15,8 +14,6 @@ export default function AdaptationLab() {
     <div className="dashboard">
       <h1>Adaptation Lab</h1>
 
-      <AdaptationForm />
-
       {sessions.length > 0 && (
         <>
           <WeeklyReport sessions={sessions} />
@@ -26,7 +23,7 @@ export default function AdaptationLab() {
       )}
 
       {sessions.length === 0 && (
-        <p className="muted">No adaptation sessions logged yet. Use the form above to get started!</p>
+        <p className="muted">No adaptation sessions logged yet.</p>
       )}
     </div>
   );
