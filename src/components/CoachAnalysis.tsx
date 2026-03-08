@@ -40,13 +40,13 @@ export default function CoachAnalysis({ workouts }: Props) {
     <section className="coach-analysis">
       <h2>Coach's Analysis</h2>
 
-      {dayOfWeek < 6 && (
+      {dayOfWeek !== 0 && (
         <div className="card accent-blue">
-          Mid-Week Status: {Math.round(currentWeekLoad)} load points built. Check back Sunday for your weekly grade!
+          Mid-Week Status: {Math.round(currentWeekLoad)} load points built. Check back Monday for your weekly grade!
         </div>
       )}
 
-      {dayOfWeek === 6 && lastWeekLoad > 0 && (
+      {dayOfWeek === 0 && lastWeekLoad > 0 && (
         <div
           className={`card ${
             increase > 25
