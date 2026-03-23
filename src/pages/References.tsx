@@ -705,9 +705,11 @@ export default function References() {
 
           <div className='ref-library-columns'>
             {SPORTS.map((sport) => {
-              const sportTemplates = templates.filter(
-                (t) => t.sport === sport,
-              );
+              const sportTemplates = templates
+                .filter((t) => t.sport === sport)
+                .sort((a, b) =>
+                  a.title.localeCompare(b.title, undefined, { numeric: true, sensitivity: 'base' }),
+                );
               return (
                 <div key={sport} className='ref-sport-column'>
                   <p className='ref-sport-heading'>{sport}</p>
