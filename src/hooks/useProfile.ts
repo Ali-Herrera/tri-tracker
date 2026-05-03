@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import { useAuth } from "./useAuth";
+import { useEffect, useState } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from './useAuth';
+import type { AthleteMetrics } from '../types';
 
 export interface UserProfile {
   raceName?: string;
   raceDate?: string; // ISO date string (YYYY-MM-DD)
+  athleteMetrics?: AthleteMetrics;
 }
 
 export function useProfile() {
@@ -20,7 +22,7 @@ export function useProfile() {
       return;
     }
 
-    const ref = doc(db, "users", user.uid, "settings", "profile");
+    const ref = doc(db, 'users', user.uid, 'settings', 'profile');
     const unsubscribe = onSnapshot(ref, (snap) => {
       setProfile(snap.exists() ? (snap.data() as UserProfile) : {});
       setLoading(false);
@@ -31,15 +33,21 @@ export function useProfile() {
 
   const setNextRace = async (raceName: string, raceDate: string) => {
     if (!user) return;
-    const ref = doc(db, "users", user.uid, "settings", "profile");
+    const ref = doc(db, 'users', user.uid, 'settings', 'profile');
     await setDoc(ref, { raceName, raceDate }, { merge: true });
   };
 
   const clearRace = async () => {
     if (!user) return;
-    const ref = doc(db, "users", user.uid, "settings", "profile");
+    const ref = doc(db, 'users', user.uid, 'settings', 'profile');
     await setDoc(ref, { raceName: null, raceDate: null }, { merge: true });
   };
 
-  return { profile, loading, setNextRace, clearRace };
+  const setAthleteMetrics = async (athleteMetrics: AthleteMetrics) => {
+    if (!user) return;
+    const ref = doc(db, 'users', user.uid, 'settings', 'profile');
+    await setDoc(ref, { athleteMetrics }, { merge: true });
+  };
+
+  return { profile, loading, setNextRace, clearRace, setAthleteMetrics };
 }

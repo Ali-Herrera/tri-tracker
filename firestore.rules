@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    function isFriend(uid) {
+      return isAuth() && exists(/databases/$(database)/documents/users/$(uid)/friends/$(request.auth.uid));
+    }
+
+    // collectionGroup query on "public" (used to find users by email when sending friend requests)
+    match /{path=**}/public/{doc} {
+      allow read: if isAuth();
+    }
+
+    match /users/{uid} {
+
+      // Public profile: any signed-in user can read (for friend search), only owner writes
+      match /public/{doc} {
+        allow read: if isAuth();
+        allow write: if isOwner(uid);
+      }
+
+      // Training data: owner can read/write, friends can read
+      match /workouts/{id} {
+        allow read: if isOwner(uid) || isFriend(uid);
+        allow write: if isOwner(uid);
+      }
+
+      match /adaptations/{id} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /plannedWorkouts/{id} {
+        allow read: if isOwner(uid) || isFriend(uid);
+        allow write: if isOwner(uid);
+      }
+
+      match /settings/{doc} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /references/{doc} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Workout library: owner can read/write, friends can read
+      match /referenceWorkouts/{id} {
+        allow read: if isOwner(uid) || isFriend(uid);
+        allow write: if isOwner(uid);
+      }
+
+      match /referenceUploads/{id} {
+        allow read, write: if isOwner(uid);
+      }
+
+      // Friends list: owner reads
+      // Any signed-in user can write a doc where the doc ID matches their own uid
+      // (this happens when accepting a friend request — you write to the other person's friends list)
+      match /friends/{friendUid} {
+        allow read: if isOwner(uid);
+        allow create, update: if isAuth() && friendUid == request.auth.uid;
+        allow delete: if isOwner(uid) || (isAuth() && friendUid == request.auth.uid);
+      }
+
+      // Incoming friend requests: owner reads
+      // Sender can create/update/delete (send or cancel)
+      // Owner can delete (decline)
+      match /friendRequests/{fromUid} {
+        allow read: if isOwner(uid);
+        allow create: if isAuth() && fromUid == request.auth.uid
+                      && request.resource.data.fromUid == request.auth.uid;
+        allow update: if isAuth() && fromUid == request.auth.uid;
+        allow delete: if isOwner(uid) || (isAuth() && fromUid == request.auth.uid);
+      }
+
+      // Outgoing invites: owner reads/creates/updates
+      // Target user can delete (when accepting or declining)
+      match /friendInvites/{toUid} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid);
+        allow delete: if isOwner(uid) || (isAuth() && toUid == request.auth.uid);
+      }
+    }
+  }
+}

@@ -50,6 +50,8 @@ export function useWorkouts() {
     duration: number;
     distance: number;
     intensity: number;
+    avgHR?: number;
+    avgPower?: number;
   }) => {
     if (!user) return;
     const load = workout.duration * workout.intensity;
@@ -60,6 +62,8 @@ export function useWorkouts() {
       distance: workout.distance,
       intensity: workout.intensity,
       load,
+      avgHR: workout.avgHR,
+      avgPower: workout.avgPower,
     });
   };
 
@@ -119,5 +123,12 @@ export function useWorkouts() {
     await deleteDoc(doc(db, 'users', user.uid, 'workouts', id));
   };
 
-  return { workouts, loading, addWorkout, addWorkoutsBatch, deleteAllWorkouts, deleteWorkout };
+  return {
+    workouts,
+    loading,
+    addWorkout,
+    addWorkoutsBatch,
+    deleteAllWorkouts,
+    deleteWorkout,
+  };
 }

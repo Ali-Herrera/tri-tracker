@@ -1,16 +1,18 @@
-import { FormEvent, useState } from "react";
-import { useWorkouts } from "../hooks/useWorkouts";
-import type { Sport } from "../types";
+import { FormEvent, useState } from 'react';
+import { useWorkouts } from '../hooks/useWorkouts';
+import type { Sport } from '../types';
 
-const SPORTS: Sport[] = ["Swim", "Bike", "Run", "Strength"];
+const SPORTS: Sport[] = ['Swim', 'Bike', 'Run', 'Strength'];
 
 export default function WorkoutForm() {
   const { addWorkout } = useWorkouts();
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [sport, setSport] = useState<Sport>("Swim");
+  const [sport, setSport] = useState<Sport>('Swim');
   const [duration, setDuration] = useState(30);
   const [distance, setDistance] = useState(0);
   const [intensity, setIntensity] = useState(5);
+  const [avgHR, setAvgHR] = useState<number | ''>('');
+  const [avgPower, setAvgPower] = useState<number | ''>('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -20,16 +22,20 @@ export default function WorkoutForm() {
     setSuccess(false);
     try {
       await addWorkout({
-        date: new Date(date + "T12:00:00"),
+        date: new Date(date + 'T12:00:00'),
         sport,
         duration,
         distance,
         intensity,
+        avgHR: avgHR === '' ? undefined : Number(avgHR),
+        avgPower: avgPower === '' ? undefined : Number(avgPower),
       });
       setSuccess(true);
       setDuration(30);
       setDistance(0);
       setIntensity(5);
+      setAvgHR('');
+      setAvgPower('');
       setTimeout(() => setSuccess(false), 3000);
     } finally {
       setSubmitting(false);
@@ -37,19 +43,29 @@ export default function WorkoutForm() {
   };
 
   return (
-    <form className="workout-form" onSubmit={handleSubmit}>
+    <form className='workout-form' onSubmit={handleSubmit}>
       <h3>Log Workout</h3>
 
       <label>
         Date
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        <input
+          type='date'
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
       </label>
 
       <label>
         Sport
-        <select value={sport} onChange={(e) => setSport(e.target.value as Sport)}>
+        <select
+          value={sport}
+          onChange={(e) => setSport(e.target.value as Sport)}
+        >
           {SPORTS.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>
+              {s}
+            </option>
           ))}
         </select>
       </label>
@@ -57,11 +73,11 @@ export default function WorkoutForm() {
       <label>
         Duration (mins)
         <input
-          type="number"
+          type='number'
           min={1}
           step={1}
           value={duration || ''}
-          placeholder="0"
+          placeholder='0'
           onChange={(e) => setDuration(Number(e.target.value) || 0)}
           required
         />
@@ -70,11 +86,11 @@ export default function WorkoutForm() {
       <label>
         Distance
         <input
-          type="number"
+          type='number'
           min={0}
           step={0.1}
           value={distance || ''}
-          placeholder="0"
+          placeholder='0'
           onChange={(e) => setDistance(Number(e.target.value) || 0)}
           required
         />
@@ -83,7 +99,7 @@ export default function WorkoutForm() {
       <label>
         Intensity ({intensity}/10)
         <input
-          type="range"
+          type='range'
           min={1}
           max={10}
           value={intensity}
@@ -91,11 +107,37 @@ export default function WorkoutForm() {
         />
       </label>
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Saving..." : "Log Workout"}
+      <label>
+        Avg HR (bpm)
+        <input
+          type='number'
+          min={0}
+          value={avgHR}
+          placeholder='Optional'
+          onChange={(e) =>
+            setAvgHR(e.target.value === '' ? '' : Number(e.target.value))
+          }
+        />
+      </label>
+
+      <label>
+        Avg Power (watts)
+        <input
+          type='number'
+          min={0}
+          value={avgPower}
+          placeholder='Optional'
+          onChange={(e) =>
+            setAvgPower(e.target.value === '' ? '' : Number(e.target.value))
+          }
+        />
+      </label>
+
+      <button type='submit' disabled={submitting}>
+        {submitting ? 'Saving...' : 'Log Workout'}
       </button>
 
-      {success && <p className="success-text">Workout recorded!</p>}
+      {success && <p className='success-text'>Workout recorded!</p>}
     </form>
   );
 }

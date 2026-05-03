@@ -3,6 +3,12 @@ import { Timestamp } from 'firebase/firestore';
 export type Sport = 'Swim' | 'Bike' | 'Run' | 'Strength';
 export type Discipline = 'Swim' | 'Bike' | 'Run';
 
+export interface AthleteMetrics {
+  swim: { lthr?: number; css?: number };
+  bike: { lthr?: number; ftp?: number };
+  run: { lthr?: number; ftp?: number };
+}
+
 export interface Workout {
   id: string;
   date: Timestamp;
@@ -11,6 +17,8 @@ export interface Workout {
   distance: number;
   intensity: number;
   load: number;
+  avgHR?: number;
+  avgPower?: number;
 }
 
 export interface AdaptationSession {
