@@ -21,8 +21,14 @@ export function useTrainingLoad() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (workoutsLoading || sessionsLoading || !profile?.athleteMetrics) {
+    if (workoutsLoading || sessionsLoading) {
       setLoading(true);
+      return;
+    }
+
+    if (!profile?.athleteMetrics) {
+      setLoading(false);
+      setData([]);
       return;
     }
 

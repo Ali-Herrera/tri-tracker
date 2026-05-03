@@ -8,10 +8,10 @@ import { useTrainingLoad } from '../hooks/useTrainingLoad';
 
 export default function AdaptationLab() {
   const { sessions, loading: sessionsLoading, deleteSession } = useAdaptation();
-  const { profile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const { data, loading: loadLoading } = useTrainingLoad();
 
-  if (sessionsLoading || loadLoading) {
+  if (sessionsLoading || loadLoading || profileLoading) {
     return <p>Loading...</p>;
   }
 
