@@ -43,10 +43,25 @@ export function useProfile() {
     await setDoc(ref, { raceName: null, raceDate: null }, { merge: true });
   };
 
+  const cleanAthleteMetrics = (metrics: AthleteMetrics) => {
+    return {
+      swim: metrics.swim.lthr !== undefined ? { lthr: metrics.swim.lthr } : {},
+      bike: {
+        ...(metrics.bike.lthr !== undefined ? { lthr: metrics.bike.lthr } : {}),
+        ...(metrics.bike.ftp !== undefined ? { ftp: metrics.bike.ftp } : {}),
+      },
+      run: {
+        ...(metrics.run.lthr !== undefined ? { lthr: metrics.run.lthr } : {}),
+        ...(metrics.run.ftp !== undefined ? { ftp: metrics.run.ftp } : {}),
+      },
+    } as AthleteMetrics;
+  };
+
   const setAthleteMetrics = async (athleteMetrics: AthleteMetrics) => {
     if (!user) return;
     const ref = doc(db, 'users', user.uid, 'settings', 'profile');
-    await setDoc(ref, { athleteMetrics }, { merge: true });
+    const cleaned = cleanAthleteMetrics(athleteMetrics);
+    await setDoc(ref, { athleteMetrics: cleaned }, { merge: true });
   };
 
   return { profile, loading, setNextRace, clearRace, setAthleteMetrics };
