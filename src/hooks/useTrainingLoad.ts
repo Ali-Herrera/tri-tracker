@@ -63,7 +63,8 @@ export function useTrainingLoad() {
       .filter((s) => s.discipline === 'Swim' || s.discipline === 'Run') // Only use for Swim/Run
       .map((s) => {
         // Estimate intensity: low drift = easy, high drift = hard
-        const estimatedIntensity = s.decoupling > 10 ? 8 : s.decoupling > 5 ? 5 : 2;
+        const estimatedIntensity =
+          s.decoupling > 10 ? 8 : s.decoupling > 5 ? 5 : 2;
         return {
           date: s.date.toDate().toDateString(),
           sport: s.discipline,

@@ -1,9 +1,9 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import type { AthleteMetrics } from '../types';
 
 export default function AthleteMetricsForm() {
-  const { setAthleteMetrics } = useProfile();
+  const { profile, loading: profileLoading, setAthleteMetrics } = useProfile();
   const [metrics, setMetrics] = useState<AthleteMetrics>({
     swim: { lthr: undefined },
     bike: { lthr: undefined, ftp: undefined },
@@ -11,15 +11,35 @@ export default function AthleteMetricsForm() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!profile?.athleteMetrics) return;
+    setMetrics({
+      swim: { lthr: profile.athleteMetrics.swim?.lthr },
+      bike: {
+        lthr: profile.athleteMetrics.bike?.lthr,
+        ftp: profile.athleteMetrics.bike?.ftp,
+      },
+      run: {
+        lthr: profile.athleteMetrics.run?.lthr,
+        ftp: profile.athleteMetrics.run?.ftp,
+      },
+    });
+  }, [profile?.athleteMetrics]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setSuccess(false);
+    setError(null);
     try {
       await setAthleteMetrics(metrics);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      setError('Could not save metrics. Please try again.');
+      console.error('Error saving athlete metrics', err);
     } finally {
       setSubmitting(false);
     }
@@ -135,11 +155,12 @@ export default function AthleteMetricsForm() {
         </label>
       </fieldset>
 
-      <button type='submit' disabled={submitting}>
+      <button type='submit' disabled={submitting || profileLoading}>
         {submitting ? 'Saving...' : 'Save Metrics'}
       </button>
 
       {success && <p className='success-text'>Metrics saved!</p>}
+      {error && <p className='error-text'>{error}</p>}
     </form>
   );
 }
