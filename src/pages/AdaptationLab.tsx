@@ -29,23 +29,11 @@ export default function AdaptationLab() {
     <div className='dashboard'>
       <h1>Adaptation Lab</h1>
 
-      {data.length > 0 && (
-        <div>
-          <h2>Training Load Trends</h2>
-          {data.slice(-7).map((d) => (
-            <div key={d.date}>
-              <strong>{d.date}</strong>: ATL {d.combined.atl.toFixed(1)}, CTL{' '}
-              {d.combined.ctl.toFixed(1)}, TSB {d.combined.tsb.toFixed(1)}
-            </div>
-          ))}
-        </div>
-      )}
-
       {sessions.length > 0 && (
         <>
           <WeeklyReport sessions={sessions} />
           <StatusTable sessions={sessions} onDelete={deleteSession} />
-          <TrendCharts sessions={sessions} />
+          <TrendCharts sessions={sessions} loadData={data} />
         </>
       )}
 
