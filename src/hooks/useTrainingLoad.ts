@@ -44,7 +44,7 @@ export function useTrainingLoad() {
     const workoutTSS = recentWorkouts
       .filter((w) => w.sport !== 'Strength') // Exclude Strength
       .map((w) => ({
-        date: w.date.toDate().toDateString(),
+        date: w.date.toDate().toISOString().slice(0, 10),
         sport: w.sport as Discipline,
         tss:
           calculateTSS(
@@ -67,7 +67,7 @@ export function useTrainingLoad() {
         const estimatedIntensity =
           tsb > 10 ? 2 : tsb > 0 ? 4 : tsb > -10 ? 6 : 8;
         return {
-          date: s.date.toDate().toDateString(),
+          date: s.date.toDate().toISOString().slice(0, 10),
           sport: s.discipline,
           tss:
             calculateTSS(

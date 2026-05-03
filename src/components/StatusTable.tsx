@@ -1,9 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import type { AdaptationSession } from '../types';
 
+interface LoadPoint {
+  date: string;
+  combined: { atl: number; ctl: number; tsb: number };
+  swim: { atl: number; ctl: number; tsb: number };
+  bike: { atl: number; ctl: number; tsb: number };
+  run: { atl: number; ctl: number; tsb: number };
+}
+
 interface Props {
   sessions: AdaptationSession[];
+  loadData?: LoadPoint[];
   onDelete?: (id: string) => void;
 }
 
@@ -17,8 +26,12 @@ function getStatus(tsb: number): { label: string; className: string } {
   return { label: 'High Fatigue', className: 'status-red' };
 }
 
-export default function StatusTable({ sessions, onDelete }: Props) {
+export default function StatusTable({ sessions, loadData, onDelete }: Props) {
   const [expanded, setExpanded] = useState(true);
+
+  const loadByDate = useMemo(() => {
+    return new Map(loadData?.map((entry) => [entry.date, entry]) ?? []);
+  }, [loadData]);
   if (sessions.length === 0)
     return <p className='muted'>No sessions logged yet.</p>;
 
@@ -43,7 +56,6 @@ export default function StatusTable({ sessions, onDelete }: Props) {
                 <th>Date</th>
                 <th>Discipline</th>
                 <th>Type</th>
-                <th>EF</th>
                 <th>TSB</th>
                 <th>Status</th>
                 {onDelete && <th></th>}
@@ -51,15 +63,20 @@ export default function StatusTable({ sessions, onDelete }: Props) {
             </thead>
             <tbody>
               {sessions.map((s) => {
-                const tsb = s.tsb ?? s.decoupling ?? 0;
-                const status = getStatus(tsb);
+                const dateKey = format(s.date.toDate(), 'yyyy-MM-dd');
+                const rowLoad = loadByDate.get(dateKey);
+                const tsb =
+                  rowLoad?.combined.tsb ?? s.tsb ?? s.decoupling ?? null;
+                const status =
+                  tsb === null
+                    ? { label: 'No TSB', className: 'status-muted' }
+                    : getStatus(tsb);
                 return (
                   <tr key={s.id}>
                     <td>{format(s.date.toDate(), 'MMM d, yyyy')}</td>
                     <td>{s.discipline}</td>
                     <td>{s.type}</td>
-                    <td>{s.ef.toFixed(4)}</td>
-                    <td>{tsb.toFixed(1)}</td>
+                    <td>{tsb !== null ? tsb.toFixed(1) : '-'}</td>
                     <td>
                       <span className={`status-badge ${status.className}`}>
                         {status.label}
