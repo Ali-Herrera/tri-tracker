@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   collection,
   addDoc,
@@ -8,10 +8,10 @@ import {
   query,
   orderBy,
   Timestamp,
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { useAuth } from "./useAuth";
-import type { AdaptationSession, Discipline } from "../types";
+} from 'firebase/firestore';
+import { db } from '../firebase';
+import { useAuth } from './useAuth';
+import type { AdaptationSession, Discipline } from '../types';
 
 export function useAdaptation() {
   const { user } = useAuth();
@@ -26,8 +26,8 @@ export function useAdaptation() {
     }
 
     const q = query(
-      collection(db, "users", user.uid, "adaptations"),
-      orderBy("date", "desc")
+      collection(db, 'users', user.uid, 'adaptations'),
+      orderBy('date', 'desc'),
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -47,21 +47,21 @@ export function useAdaptation() {
     discipline: Discipline;
     type: string;
     ef: number;
-    decoupling: number;
+    tsb: number;
   }) => {
     if (!user) return;
-    await addDoc(collection(db, "users", user.uid, "adaptations"), {
+    await addDoc(collection(db, 'users', user.uid, 'adaptations'), {
       date: Timestamp.fromDate(session.date),
       discipline: session.discipline,
       type: session.type,
       ef: session.ef,
-      decoupling: session.decoupling,
+      tsb: session.tsb,
     });
   };
 
   const deleteSession = async (id: string) => {
     if (!user) return;
-    await deleteDoc(doc(db, "users", user.uid, "adaptations", id));
+    await deleteDoc(doc(db, 'users', user.uid, 'adaptations', id));
   };
 
   return { sessions, loading, addSession, deleteSession };

@@ -191,7 +191,7 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
       discipline: adaptation.discipline,
       type: adaptation.type,
       ef,
-      decoupling: adaptation.drift,
+      tsb: adaptation.tsb ?? adaptation.drift ?? 0,
     };
   };
 
@@ -255,7 +255,10 @@ export function usePlannedWorkouts(startDate: string, endDate: string) {
         'workouts',
         workout.workoutDocId,
       );
-      await updateDoc(workoutRef, buildWorkoutData(workout, distance, intensity));
+      await updateDoc(
+        workoutRef,
+        buildWorkoutData(workout, distance, intensity),
+      );
     }
 
     if (adaptation) {

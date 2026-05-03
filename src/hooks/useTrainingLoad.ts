@@ -58,13 +58,14 @@ export function useTrainingLoad() {
       }));
 
     // For sessions, assume 60 min duration for TSS calculation
-    // Estimate intensity based on decoupling (high drift = higher effort)
+    // Estimate intensity based on TSB-style drift if available
     const sessionTSS = recentSessions
       .filter((s) => s.discipline === 'Swim' || s.discipline === 'Run') // Only use for Swim/Run
       .map((s) => {
-        // Estimate intensity: low drift = easy, high drift = hard
+        const tsb = s.tsb ?? s.decoupling ?? 0;
+        // Estimate intensity: very positive freshness = easy, negative freshness = harder
         const estimatedIntensity =
-          s.decoupling > 10 ? 8 : s.decoupling > 5 ? 5 : 2;
+          tsb > 10 ? 2 : tsb > 0 ? 4 : tsb > -10 ? 6 : 8;
         return {
           date: s.date.toDate().toDateString(),
           sport: s.discipline,

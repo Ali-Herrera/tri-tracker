@@ -119,12 +119,12 @@ export default function TrendCharts({ loadData }: Props) {
         </p>
         <ul>
           <li>
-            +15 to +25: peak recovery, but too much time off can lead to fitness
+            TSB: +15 to +25: peak recovery, but too much time off can lead to fitness
             loss.
           </li>
-          <li>0: training equilibrium, balanced fatigue and fitness.</li>
-          <li>-10 to -30: ideal training zone for building fitness.</li>
-          <li>Below -30: extreme strain and recovery is required.</li>
+          <li>TSB: 0: training equilibrium, balanced fatigue and fitness.</li>
+          <li>TSB: -10 to -30: ideal training zone for building fitness.</li>
+          <li>TSB: Below -30: extreme strain and recovery is required.</li>
         </ul>
       </div>
 

@@ -7,11 +7,13 @@ interface Props {
   onDelete?: (id: string) => void;
 }
 
-function getStatus(decoupling: number): { label: string; className: string } {
-  if (decoupling <= 5.0)
-    return { label: 'Aerobically Stable', className: 'status-green' };
-  if (decoupling <= 8.0)
-    return { label: 'Developing', className: 'status-yellow' };
+function getStatus(tsb: number): { label: string; className: string } {
+  if (tsb >= 15)
+    return { label: 'Peaking Recovery', className: 'status-green' };
+  if (tsb >= 0) return { label: 'Balanced', className: 'status-blue' };
+  if (tsb >= -10)
+    return { label: 'Light Training', className: 'status-yellow' };
+  if (tsb >= -30) return { label: 'Productive', className: 'status-orange' };
   return { label: 'High Fatigue', className: 'status-red' };
 }
 
@@ -42,21 +44,22 @@ export default function StatusTable({ sessions, onDelete }: Props) {
                 <th>Discipline</th>
                 <th>Type</th>
                 <th>EF</th>
-                <th>Decoupling</th>
+                <th>TSB</th>
                 <th>Status</th>
                 {onDelete && <th></th>}
               </tr>
             </thead>
             <tbody>
               {sessions.map((s) => {
-                const status = getStatus(s.decoupling);
+                const tsb = s.tsb ?? s.decoupling ?? 0;
+                const status = getStatus(tsb);
                 return (
                   <tr key={s.id}>
                     <td>{format(s.date.toDate(), 'MMM d, yyyy')}</td>
                     <td>{s.discipline}</td>
                     <td>{s.type}</td>
                     <td>{s.ef.toFixed(4)}</td>
-                    <td>{s.decoupling.toFixed(1)}%</td>
+                    <td>{tsb.toFixed(1)}</td>
                     <td>
                       <span className={`status-badge ${status.className}`}>
                         {status.label}

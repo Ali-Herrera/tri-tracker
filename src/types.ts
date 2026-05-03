@@ -27,14 +27,16 @@ export interface AdaptationSession {
   discipline: Discipline;
   type: string;
   ef: number;
-  decoupling: number;
+  tsb?: number;
+  decoupling?: number; // legacy field, kept for compatibility with older entries
 }
 
 export interface AdaptationCompletionInput {
   discipline: Discipline;
   type: string;
   avgHr: number;
-  drift: number;
+  tsb: number;
+  drift?: number; // legacy field, kept for compatibility during migration
   avgPower?: number;
   paceMin?: number;
   paceSec?: number;

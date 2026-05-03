@@ -54,7 +54,13 @@ interface Props {
     intensity: number,
     adaptation?: AdaptationCompletionInput,
   ) => Promise<void>;
-  onUpdateLibrary: (workout: { sport: string; title: string; notes: string; easyMinutes: number; hardMinutes: number }) => Promise<void>;
+  onUpdateLibrary: (workout: {
+    sport: string;
+    title: string;
+    notes: string;
+    easyMinutes: number;
+    hardMinutes: number;
+  }) => Promise<void>;
   initialDate: string;
   existingWorkout: PlannedWorkout | null;
 }
@@ -91,7 +97,7 @@ export default function PlannedWorkoutModal({
   const [swimPaceMin, setSwimPaceMin] = useState(2);
   const [swimPaceSec, setSwimPaceSec] = useState(0);
   const [avgHr, setAvgHr] = useState(120);
-  const [drift, setDrift] = useState(0);
+  const [tsb, setTsb] = useState(0);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -123,7 +129,7 @@ export default function PlannedWorkoutModal({
       setSwimPaceMin(completedAdaptation.swimPaceMin ?? 0);
       setSwimPaceSec(completedAdaptation.swimPaceSec ?? 0);
       setAvgHr(completedAdaptation.avgHr ?? 0);
-      setDrift(completedAdaptation.drift ?? 0);
+      setTsb(completedAdaptation.tsb ?? completedAdaptation.drift ?? 0);
     } else {
       if (baseDiscipline) {
         setAdaptationType(ADAPTATION_OPTIONS[baseDiscipline][0]);
@@ -134,7 +140,7 @@ export default function PlannedWorkoutModal({
       setSwimPaceMin(2);
       setSwimPaceSec(0);
       setAvgHr(120);
-      setDrift(0);
+      setTsb(0);
     }
   }, [existingWorkout, initialDate, isOpen]);
 
@@ -189,7 +195,13 @@ export default function PlannedWorkoutModal({
     if (!isEditing) return;
     setSubmitting(true);
     try {
-      await onUpdateLibrary({ sport, title: title.trim(), notes: notes.trim(), easyMinutes, hardMinutes });
+      await onUpdateLibrary({
+        sport,
+        title: title.trim(),
+        notes: notes.trim(),
+        easyMinutes,
+        hardMinutes,
+      });
     } finally {
       setSubmitting(false);
     }
@@ -219,12 +231,14 @@ export default function PlannedWorkoutModal({
             discipline: adaptationDiscipline,
             type: adaptationType,
             avgHr,
-            drift,
+            tsb,
             avgPower: adaptationDiscipline === 'Bike' ? avgPower : undefined,
             paceMin: adaptationDiscipline === 'Run' ? paceMin : undefined,
             paceSec: adaptationDiscipline === 'Run' ? paceSec : undefined,
-            swimPaceMin: adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
-            swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
+            swimPaceMin:
+              adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
+            swimPaceSec:
+              adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
       await onComplete(existingWorkout, distance, intensity, adaptationInput);
@@ -243,15 +257,22 @@ export default function PlannedWorkoutModal({
             discipline: adaptationDiscipline,
             type: adaptationType,
             avgHr,
-            drift,
+            tsb,
             avgPower: adaptationDiscipline === 'Bike' ? avgPower : undefined,
             paceMin: adaptationDiscipline === 'Run' ? paceMin : undefined,
             paceSec: adaptationDiscipline === 'Run' ? paceSec : undefined,
-            swimPaceMin: adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
-            swimPaceSec: adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
+            swimPaceMin:
+              adaptationDiscipline === 'Swim' ? swimPaceMin : undefined,
+            swimPaceSec:
+              adaptationDiscipline === 'Swim' ? swimPaceSec : undefined,
           }
         : undefined;
-      await onUpdateCompleted(existingWorkout, distance, intensity, adaptationInput);
+      await onUpdateCompleted(
+        existingWorkout,
+        distance,
+        intensity,
+        adaptationInput,
+      );
       onClose();
     } finally {
       setSubmitting(false);
@@ -264,7 +285,14 @@ export default function PlannedWorkoutModal({
         <form className='workout-form' onSubmit={handleSubmit}>
           <div className='modal-header'>
             <h3>{isEditing ? 'Edit Planned Workout' : 'Plan a Workout'}</h3>
-            <button type='button' className='modal-close-btn' onClick={onClose} aria-label='Close'>&#x2715;</button>
+            <button
+              type='button'
+              className='modal-close-btn'
+              onClick={onClose}
+              aria-label='Close'
+            >
+              &#x2715;
+            </button>
           </div>
 
           <label>
@@ -404,7 +432,9 @@ export default function PlannedWorkoutModal({
                       step={1}
                       value={intensity || ''}
                       placeholder='5'
-                      onChange={(e) => setIntensity(Number(e.target.value) || 0)}
+                      onChange={(e) =>
+                        setIntensity(Number(e.target.value) || 0)
+                      }
                     />
                   </label>
                   {adaptationDiscipline && (
@@ -517,18 +547,18 @@ export default function PlannedWorkoutModal({
                         />
                       </label>
                       <label>
-                        Decoupling / Drift (%)
+                        TSB (freshness)
                         <input
                           type='number'
                           min={-100}
                           max={100}
                           step={0.1}
-                          value={drift || ''}
+                          value={tsb || ''}
                           placeholder='0'
                           onChange={(e) => {
                             const v = Number(e.target.value);
                             if (e.target.value === '' || Number.isFinite(v))
-                              setDrift(v || 0);
+                              setTsb(v || 0);
                           }}
                         />
                       </label>
@@ -584,7 +614,9 @@ export default function PlannedWorkoutModal({
                       step={1}
                       value={intensity || ''}
                       placeholder='5'
-                      onChange={(e) => setIntensity(Number(e.target.value) || 0)}
+                      onChange={(e) =>
+                        setIntensity(Number(e.target.value) || 0)
+                      }
                     />
                   </label>
                   {adaptationDiscipline && (
@@ -697,18 +729,18 @@ export default function PlannedWorkoutModal({
                         />
                       </label>
                       <label>
-                        Decoupling / Drift (%)
+                        TSB (freshness)
                         <input
                           type='number'
                           min={-100}
                           max={100}
                           step={0.1}
-                          value={drift || ''}
+                          value={tsb || ''}
                           placeholder='0'
                           onChange={(e) => {
                             const v = Number(e.target.value);
                             if (e.target.value === '' || Number.isFinite(v))
-                              setDrift(v || 0);
+                              setTsb(v || 0);
                           }}
                         />
                       </label>

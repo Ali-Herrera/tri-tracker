@@ -1,18 +1,29 @@
-import { FormEvent, useState } from "react";
-import { useAdaptation } from "../hooks/useAdaptation";
-import type { Discipline } from "../types";
+import { FormEvent, useState } from 'react';
+import { useAdaptation } from '../hooks/useAdaptation';
+import type { Discipline } from '../types';
 
-const DISCIPLINES: Discipline[] = ["Bike", "Run", "Swim"];
+const DISCIPLINES: Discipline[] = ['Bike', 'Run', 'Swim'];
 
 const WORKOUT_OPTIONS: Record<Discipline, string[]> = {
-  Run: ["Aerobic Base Build", "Threshold Intervals", "Hill Repeats", "Easy Recovery Run", "Other"],
-  Bike: ["Steady State (Post-Intervals)", "Progressive Build (Ride 6)", "Pure Aerobic (Recovery)", "Other"],
-  Swim: ["Endurance Sets", "Technique/Drills", "Sprints", "Other"],
+  Run: [
+    'Aerobic Base Build',
+    'Threshold Intervals',
+    'Hill Repeats',
+    'Easy Recovery Run',
+    'Other',
+  ],
+  Bike: [
+    'Steady State (Post-Intervals)',
+    'Progressive Build (Ride 6)',
+    'Pure Aerobic (Recovery)',
+    'Other',
+  ],
+  Swim: ['Endurance Sets', 'Technique/Drills', 'Sprints', 'Other'],
 };
 
 export default function AdaptationForm() {
   const { addSession } = useAdaptation();
-  const [discipline, setDiscipline] = useState<Discipline>("Bike");
+  const [discipline, setDiscipline] = useState<Discipline>('Bike');
   const [type, setType] = useState(WORKOUT_OPTIONS.Bike[0]);
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
 
@@ -24,7 +35,7 @@ export default function AdaptationForm() {
   const [swimPaceSec, setSwimPaceSec] = useState(0);
 
   const [avgHr, setAvgHr] = useState(120);
-  const [drift, setDrift] = useState(0);
+  const [tsb, setTsb] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -35,9 +46,9 @@ export default function AdaptationForm() {
 
   const computeEf = (): number => {
     let work: number;
-    if (discipline === "Bike") {
+    if (discipline === 'Bike') {
       work = avgPower;
-    } else if (discipline === "Run") {
+    } else if (discipline === 'Run') {
       const paceDecimal = paceMin + paceSec / 60;
       work = paceDecimal > 0 ? (1 / paceDecimal) * 1000 : 0;
     } else {
@@ -53,11 +64,11 @@ export default function AdaptationForm() {
     setSuccess(false);
     try {
       await addSession({
-        date: new Date(date + "T12:00:00"),
+        date: new Date(date + 'T12:00:00'),
         discipline,
         type,
         ef: computeEf(),
-        decoupling: drift,
+        tsb,
       });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -67,14 +78,19 @@ export default function AdaptationForm() {
   };
 
   return (
-    <form className="workout-form" onSubmit={handleSubmit}>
+    <form className='workout-form' onSubmit={handleSubmit}>
       <h3>Log Session</h3>
 
       <label>
         Discipline
-        <select value={discipline} onChange={(e) => handleDisciplineChange(e.target.value as Discipline)}>
+        <select
+          value={discipline}
+          onChange={(e) => handleDisciplineChange(e.target.value as Discipline)}
+        >
           {DISCIPLINES.map((d) => (
-            <option key={d} value={d}>{d}</option>
+            <option key={d} value={d}>
+              {d}
+            </option>
           ))}
         </select>
       </label>
@@ -83,75 +99,125 @@ export default function AdaptationForm() {
         Workout Category
         <select value={type} onChange={(e) => setType(e.target.value)}>
           {WORKOUT_OPTIONS[discipline].map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
           ))}
         </select>
       </label>
 
       <label>
         Date
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        <input
+          type='date'
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          required
+        />
       </label>
 
-      {discipline === "Bike" && (
+      {discipline === 'Bike' && (
         <label>
           Avg Power (Watts)
-          <input type="number" min={0} value={avgPower || ''} placeholder="0" onChange={(e) => setAvgPower(Number(e.target.value) || 0)} />
+          <input
+            type='number'
+            min={0}
+            value={avgPower || ''}
+            placeholder='0'
+            onChange={(e) => setAvgPower(Number(e.target.value) || 0)}
+          />
         </label>
       )}
 
-      {discipline === "Run" && (
-        <div className="pace-row">
+      {discipline === 'Run' && (
+        <div className='pace-row'>
           <label>
             Pace Min
-            <input type="number" min={0} max={20} value={paceMin || ''} placeholder="0" onChange={(e) => setPaceMin(Number(e.target.value) || 0)} />
+            <input
+              type='number'
+              min={0}
+              max={20}
+              value={paceMin || ''}
+              placeholder='0'
+              onChange={(e) => setPaceMin(Number(e.target.value) || 0)}
+            />
           </label>
           <label>
             Pace Sec
-            <input type="number" min={0} max={59} value={paceSec || ''} placeholder="0" onChange={(e) => setPaceSec(Number(e.target.value) || 0)} />
+            <input
+              type='number'
+              min={0}
+              max={59}
+              value={paceSec || ''}
+              placeholder='0'
+              onChange={(e) => setPaceSec(Number(e.target.value) || 0)}
+            />
           </label>
         </div>
       )}
 
-      {discipline === "Swim" && (
-        <div className="pace-row">
+      {discipline === 'Swim' && (
+        <div className='pace-row'>
           <label>
             Pace /100yd Min
-            <input type="number" min={0} max={20} value={swimPaceMin || ''} placeholder="0" onChange={(e) => setSwimPaceMin(Number(e.target.value) || 0)} required />
+            <input
+              type='number'
+              min={0}
+              max={20}
+              value={swimPaceMin || ''}
+              placeholder='0'
+              onChange={(e) => setSwimPaceMin(Number(e.target.value) || 0)}
+              required
+            />
           </label>
           <label>
             Pace /100yd Sec
-            <input type="number" min={0} max={59} value={swimPaceSec || ''} placeholder="0" onChange={(e) => setSwimPaceSec(Number(e.target.value) || 0)} required />
+            <input
+              type='number'
+              min={0}
+              max={59}
+              value={swimPaceSec || ''}
+              placeholder='0'
+              onChange={(e) => setSwimPaceSec(Number(e.target.value) || 0)}
+              required
+            />
           </label>
         </div>
       )}
 
       <label>
         Avg Heart Rate (BPM)
-        <input type="number" min={1} value={avgHr || ''} placeholder="0" onChange={(e) => setAvgHr(Number(e.target.value) || 0)} required />
+        <input
+          type='number'
+          min={1}
+          value={avgHr || ''}
+          placeholder='0'
+          onChange={(e) => setAvgHr(Number(e.target.value) || 0)}
+          required
+        />
       </label>
 
       <label>
-        Decoupling / Drift (%)
+        TSB (freshness)
         <input
-          type="number"
+          type='number'
           min={-100}
           max={100}
           step={0.1}
-          value={drift || ''}
-          placeholder="0"
+          value={tsb || ''}
+          placeholder='0'
           onChange={(e) => {
             const v = Number(e.target.value);
-            if (e.target.value === '' || Number.isFinite(v)) setDrift(v || 0);
+            if (e.target.value === '' || Number.isFinite(v)) setTsb(v || 0);
           }}
         />
       </label>
 
-      <button type="submit" disabled={submitting}>
-        {submitting ? "Saving..." : "Save Session"}
+      <button type='submit' disabled={submitting}>
+        {submitting ? 'Saving...' : 'Save Session'}
       </button>
 
-      {success && <p className="success-text">Session logged!</p>}
+      {success && <p className='success-text'>Session logged!</p>}
     </form>
   );
 }
