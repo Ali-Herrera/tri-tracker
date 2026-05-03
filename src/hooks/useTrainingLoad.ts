@@ -51,29 +51,33 @@ export function useTrainingLoad() {
             w.duration,
             w.avgHR,
             w.avgPower,
+            w.intensity,
             w.sport as 'Swim' | 'Bike' | 'Run',
             athleteMetrics,
           ) || 0,
       }));
 
     // For sessions, assume 60 min duration for TSS calculation
-    const sessionTSS = recentSessions.map((s) => ({
-      date: s.date.toDate().toDateString(),
-      sport: s.discipline,
-      tss:
-        calculateTSS(
-          60,
-          s.ef *
-            (s.discipline === 'Swim'
-              ? 180
-              : s.discipline === 'Bike'
-                ? 180
-                : 180),
-          undefined,
-          s.discipline,
-          athleteMetrics,
-        ) || 0, // Rough estimate
-    }));
+    // Estimate intensity based on decoupling (high drift = higher effort)
+    const sessionTSS = recentSessions
+      .filter((s) => s.discipline === 'Swim' || s.discipline === 'Run') // Only use for Swim/Run
+      .map((s) => {
+        // Estimate intensity: low drift = easy, high drift = hard
+        const estimatedIntensity = s.decoupling > 10 ? 8 : s.decoupling > 5 ? 5 : 2;
+        return {
+          date: s.date.toDate().toDateString(),
+          sport: s.discipline,
+          tss:
+            calculateTSS(
+              60,
+              undefined,
+              undefined,
+              estimatedIntensity,
+              s.discipline,
+              athleteMetrics,
+            ) || 0,
+        };
+      });
 
     const allTSS = [...workoutTSS, ...sessionTSS];
 

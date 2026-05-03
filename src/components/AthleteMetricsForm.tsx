@@ -5,7 +5,7 @@ import type { AthleteMetrics } from '../types';
 export default function AthleteMetricsForm() {
   const { setAthleteMetrics } = useProfile();
   const [metrics, setMetrics] = useState<AthleteMetrics>({
-    swim: { lthr: undefined, css: undefined },
+    swim: { lthr: undefined },
     bike: { lthr: undefined, ftp: undefined },
     run: { lthr: undefined, ftp: undefined },
   });
@@ -46,8 +46,12 @@ export default function AthleteMetricsForm() {
 
       <fieldset>
         <legend>Swim</legend>
+        <p style={{ fontSize: '0.9em', color: '#666' }}>
+          Swim TSS uses perceived effort (easy/moderate/hard = 40/60/80 TSS/hr)
+          based on your logged intensity.
+        </p>
         <label>
-          LTHR (bpm)
+          LTHR (bpm) - optional, for HR-based backup
           <input
             type='number'
             min={0}
@@ -56,22 +60,6 @@ export default function AthleteMetricsForm() {
               updateMetric(
                 'swim',
                 'lthr',
-                e.target.value ? Number(e.target.value) : undefined,
-              )
-            }
-          />
-        </label>
-        <label>
-          CSS (m/s or pace)
-          <input
-            type='number'
-            min={0}
-            step={0.01}
-            value={metrics.swim.css || ''}
-            onChange={(e) =>
-              updateMetric(
-                'swim',
-                'css',
                 e.target.value ? Number(e.target.value) : undefined,
               )
             }

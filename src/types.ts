@@ -4,7 +4,7 @@ export type Sport = 'Swim' | 'Bike' | 'Run' | 'Strength';
 export type Discipline = 'Swim' | 'Bike' | 'Run';
 
 export interface AthleteMetrics {
-  swim: { lthr?: number; css?: number };
+  swim: { lthr?: number };
   bike: { lthr?: number; ftp?: number };
   run: { lthr?: number; ftp?: number };
 }
