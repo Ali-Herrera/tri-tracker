@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import type { AdaptationSession } from "../types";
+import { useState } from 'react';
+import { format } from 'date-fns';
+import type { AdaptationSession } from '../types';
 
 interface Props {
   sessions: AdaptationSession[];
@@ -8,21 +8,24 @@ interface Props {
 }
 
 function getStatus(decoupling: number): { label: string; className: string } {
-  if (decoupling <= 5.0) return { label: "Aerobically Stable", className: "status-green" };
-  if (decoupling <= 8.0) return { label: "Developing", className: "status-yellow" };
-  return { label: "High Fatigue", className: "status-red" };
+  if (decoupling <= 5.0)
+    return { label: 'Aerobically Stable', className: 'status-green' };
+  if (decoupling <= 8.0)
+    return { label: 'Developing', className: 'status-yellow' };
+  return { label: 'High Fatigue', className: 'status-red' };
 }
 
 export default function StatusTable({ sessions, onDelete }: Props) {
   const [expanded, setExpanded] = useState(true);
-  if (sessions.length === 0) return <p className="muted">No sessions logged yet.</p>;
+  if (sessions.length === 0)
+    return <p className='muted'>No sessions logged yet.</p>;
 
   return (
     <section>
-      <div className="section-header">
+      <div className='section-header'>
         <h2>Recent Raw Data</h2>
         <button
-          type="button"
+          type='button'
           className={`filter-btn ${expanded ? 'active' : ''}`}
           onClick={() => setExpanded((prev) => !prev)}
         >
@@ -31,7 +34,7 @@ export default function StatusTable({ sessions, onDelete }: Props) {
       </div>
 
       {expanded && (
-        <div className="table-wrapper activity-log-table">
+        <div className='table-wrapper activity-log-table'>
           <table>
             <thead>
               <tr>
@@ -55,13 +58,15 @@ export default function StatusTable({ sessions, onDelete }: Props) {
                     <td>{s.ef.toFixed(4)}</td>
                     <td>{s.decoupling.toFixed(1)}%</td>
                     <td>
-                      <span className={`status-badge ${status.className}`}>{status.label}</span>
+                      <span className={`status-badge ${status.className}`}>
+                        {status.label}
+                      </span>
                     </td>
                     {onDelete && (
                       <td>
                         <button
-                          type="button"
-                          className="filter-btn"
+                          type='button'
+                          className='filter-btn'
                           onClick={() => onDelete(s.id)}
                         >
                           Delete

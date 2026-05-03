@@ -33,7 +33,7 @@ export default function AdaptationLab() {
         <>
           <WeeklyReport sessions={sessions} />
           <StatusTable sessions={sessions} onDelete={deleteSession} />
-          <TrendCharts sessions={sessions} loadData={data} />
+          <TrendCharts loadData={data} />
         </>
       )}
 
