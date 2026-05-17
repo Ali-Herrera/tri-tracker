@@ -561,8 +561,9 @@ export default function References() {
                         })
                       }
                     />
-                    <input
-                      type='text'
+                    <textarea
+                      className='ref-item-value'
+                      rows={2}
                       placeholder='Value or notes'
                       value={item.value}
                       onChange={(e) =>

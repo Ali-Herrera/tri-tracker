@@ -4,7 +4,6 @@ import Login from './components/Login';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
-import AdaptationLab from './pages/AdaptationLab';
 import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 import ImportWorkouts from './pages/ImportWorkouts';
@@ -32,7 +31,6 @@ export default function App() {
           <Routes>
             <Route path='/' element={<Dashboard />} />
             <Route path='/calendar' element={<Calendar />} />
-            <Route path='/adaptation' element={<AdaptationLab />} />
             <Route path='/friends' element={<Friends />} />
             <Route path='/friends/:uid' element={<FriendProfile />} />
             <Route path='/import' element={<ImportWorkouts />} />

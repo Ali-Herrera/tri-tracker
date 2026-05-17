@@ -428,11 +428,12 @@ body {
 .ref-item-row {
   display: grid;
   gap: 0.5rem;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: start;
 }
 
-.ref-item-row input {
+.ref-item-row input,
+.ref-item-row textarea {
   width: 100%;
   min-width: 0;
   padding: 0.55rem 0.65rem;
@@ -440,6 +441,13 @@ body {
   border-radius: var(--radius);
   background: var(--bg-input);
   color: var(--text);
+}
+
+.ref-item-row textarea {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  resize: vertical;
+  min-height: 3rem;
 }
 
 .ref-custom-list {
