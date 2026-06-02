@@ -20,6 +20,13 @@ const SPORT_COLORS: Record<string, string> = {
   Other: 'var(--text-muted)',
 };
 
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
 const sortWorkouts = (a: PlannedWorkout, b: PlannedWorkout) => {
   const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
   const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
@@ -83,7 +90,7 @@ function WorkoutCard({
       <span className='cal-workout-sport'>{workout.sport}</span>
       <span className='cal-workout-title'>{workout.title}</span>
       <span className='cal-workout-duration'>
-        {workout.easyMinutes + workout.hardMinutes}m
+        {formatDuration(workout.easyMinutes + workout.hardMinutes)}
       </span>
     </div>
   );
@@ -225,7 +232,7 @@ function WeekSummaryRow({ workouts }: { workouts: PlannedWorkout[] }) {
   return (
     <div className='cal-week-summary'>
       <span className='cal-summary-label'>
-        {total > 0 ? `${total} min` : 'No workouts'}
+        {total > 0 ? formatDuration(total) : 'No workouts'}
       </span>
       {total > 0 && (
         <div className='cal-summary-bar'>
