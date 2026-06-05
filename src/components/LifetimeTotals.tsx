@@ -29,14 +29,15 @@ export default function LifetimeTotals({ workouts, timeFrame }: Props) {
     (acc, w) => {
       const year = w.date.toDate().getFullYear();
       if (!acc[year]) {
-        acc[year] = { Swim: 0, Bike: 0, Run: 0 };
+        acc[year] = { Swim: 0, Bike: 0, Run: 0, hours: 0 };
       }
       if (w.sport === 'Swim') acc[year].Swim += w.distance;
       if (w.sport === 'Bike') acc[year].Bike += w.distance;
       if (w.sport === 'Run') acc[year].Run += w.distance;
+      acc[year].hours += w.duration / 60;
       return acc;
     },
-    {} as Record<number, { Swim: number; Bike: number; Run: number }>,
+    {} as Record<number, { Swim: number; Bike: number; Run: number; hours: number }>,
   );
 
   const yearlyRows = Object.entries(byYear)
@@ -45,6 +46,7 @@ export default function LifetimeTotals({ workouts, timeFrame }: Props) {
       swim: totals.Swim,
       bike: totals.Bike,
       run: totals.Run,
+      hours: totals.hours,
     }))
     .sort((a, b) => b.year - a.year);
 
@@ -78,6 +80,7 @@ export default function LifetimeTotals({ workouts, timeFrame }: Props) {
               <thead>
                 <tr>
                   <th>Year</th>
+                  <th>Hours</th>
                   <th>Swim (yds)</th>
                   <th>Bike (mi)</th>
                   <th>Run (mi)</th>
@@ -87,6 +90,7 @@ export default function LifetimeTotals({ workouts, timeFrame }: Props) {
                 {yearlyRows.map((row) => (
                   <tr key={row.year}>
                     <td>{row.year}</td>
+                    <td>{row.hours.toFixed(1)}</td>
                     <td>{Math.round(row.swim)}</td>
                     <td>{row.bike.toFixed(1)}</td>
                     <td>{row.run.toFixed(1)}</td>
