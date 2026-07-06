@@ -49,17 +49,29 @@ interface ResultsFormState {
   resultNotes: string;
 }
 
+interface EditFormState {
+  name: string;
+  date: string;
+  raceType: RaceType;
+  distance: string;
+  registered: boolean;
+  link: string;
+}
+
 function RaceCard({
   race,
   onDelete,
-  onSaveResults,
+  onUpdate,
 }: {
   race: RaceEntry;
   onDelete: (id: string) => void;
-  onSaveResults: (id: string, results: Partial<RaceEntry>) => Promise<void>;
+  onUpdate: (id: string, partial: Partial<RaceEntry>) => Promise<void>;
 }) {
   const [showResultsForm, setShowResultsForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
   const [form, setForm] = useState<ResultsFormState>({
     finishTime: race.finishTime || '',
     swimTime: race.swimTime || '',
@@ -68,15 +80,24 @@ function RaceCard({
     resultNotes: race.resultNotes || '',
   });
 
+  const [editForm, setEditForm] = useState<EditFormState>({
+    name: race.name,
+    date: race.date,
+    raceType: race.raceType,
+    distance: race.distance,
+    registered: race.registered,
+    link: race.link || '',
+  });
+
   const isMultiDiscipline = race.raceType === 'Triathlon' || race.raceType === 'Duathlon';
   const days = daysUntil(race.date);
   const isPast = days < 0;
 
-  const handleSave = async (e: FormEvent) => {
+  const handleSaveResults = async (e: FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await onSaveResults(race.id, {
+      await onUpdate(race.id, {
         completed: true,
         finishTime: form.finishTime || undefined,
         swimTime: form.swimTime || undefined,
@@ -87,6 +108,24 @@ function RaceCard({
       setShowResultsForm(false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveEdit = async (e: FormEvent) => {
+    e.preventDefault();
+    setEditSaving(true);
+    try {
+      await onUpdate(race.id, {
+        name: editForm.name,
+        date: editForm.date,
+        raceType: editForm.raceType,
+        distance: editForm.distance,
+        registered: editForm.registered,
+        link: editForm.link || undefined,
+      });
+      setShowEditForm(false);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -114,6 +153,13 @@ function RaceCard({
               ↗
             </a>
           )}
+          <button
+            className={`btn-icon race-edit${showEditForm ? ' active' : ''}`}
+            onClick={() => { setShowEditForm((s) => !s); setShowResultsForm(false); }}
+            title="Edit race"
+          >
+            ✎
+          </button>
           <button
             className="btn-icon race-delete"
             onClick={() => onDelete(race.id)}
@@ -167,24 +213,90 @@ function RaceCard({
           {race.resultNotes && <p className="race-result-notes">{race.resultNotes}</p>}
           <button
             className="btn-secondary btn-sm"
-            onClick={() => setShowResultsForm(true)}
+            onClick={() => { setShowResultsForm(true); setShowEditForm(false); }}
           >
             Edit Results
           </button>
         </div>
       )}
 
-      {!race.completed && isPast && !showResultsForm && (
+      {!race.completed && isPast && !showResultsForm && !showEditForm && (
         <button
           className="btn-secondary btn-sm race-complete-btn"
-          onClick={() => setShowResultsForm(true)}
+          onClick={() => { setShowResultsForm(true); setShowEditForm(false); }}
         >
           Mark Complete
         </button>
       )}
 
+      {showEditForm && (
+        <form className="race-edit-form" onSubmit={handleSaveEdit}>
+          <label>
+            Race Name
+            <input
+              type="text"
+              value={editForm.name}
+              onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+              required
+            />
+          </label>
+          <label>
+            Date
+            <input
+              type="date"
+              value={editForm.date}
+              onChange={(e) => setEditForm((f) => ({ ...f, date: e.target.value }))}
+              required
+            />
+          </label>
+          <label>
+            Race Type
+            <select
+              value={editForm.raceType}
+              onChange={(e) => setEditForm((f) => ({ ...f, raceType: e.target.value as RaceType }))}
+            >
+              {RACE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label>
+            Distance
+            <input
+              type="text"
+              value={editForm.distance}
+              onChange={(e) => setEditForm((f) => ({ ...f, distance: e.target.value }))}
+              placeholder="Sprint / Olympic / 70.3 / Marathon..."
+            />
+          </label>
+          <label>
+            Race Link
+            <input
+              type="url"
+              value={editForm.link}
+              onChange={(e) => setEditForm((f) => ({ ...f, link: e.target.value }))}
+              placeholder="https://..."
+            />
+          </label>
+          <label className="race-edit-checkbox">
+            <input
+              type="checkbox"
+              checked={editForm.registered}
+              onChange={(e) => setEditForm((f) => ({ ...f, registered: e.target.checked }))}
+            />
+            Registered
+          </label>
+          <div className="race-results-form-actions">
+            <button type="submit" className="btn-primary btn-sm" disabled={editSaving}>
+              {editSaving ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button type="button" className="btn-secondary btn-sm" onClick={() => setShowEditForm(false)}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
       {showResultsForm && (
-        <form className="race-results-form" onSubmit={handleSave}>
+        <form className="race-results-form" onSubmit={handleSaveResults}>
           <label>
             Overall Finish Time
             <input
@@ -251,6 +363,7 @@ function RaceCard({
     </div>
   );
 }
+
 
 export default function Races() {
   const { races, loading, addRace, updateRace, deleteRace } = useRaces();
@@ -378,7 +491,7 @@ export default function Races() {
                   key={race.id}
                   race={race}
                   onDelete={deleteRace}
-                  onSaveResults={updateRace}
+                  onUpdate={updateRace}
                 />
               ))}
             </div>
@@ -397,7 +510,7 @@ export default function Races() {
                   key={race.id}
                   race={race}
                   onDelete={deleteRace}
-                  onSaveResults={updateRace}
+                  onUpdate={updateRace}
                 />
               ))}
             </div>
