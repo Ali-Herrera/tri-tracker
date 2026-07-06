@@ -64,7 +64,10 @@ export function useRaces() {
 
   const updateRace = async (id: string, partial: Partial<RaceEntry>) => {
     if (!user) return;
-    await updateDoc(doc(db, 'users', user.uid, 'races', id), partial);
+    const clean = Object.fromEntries(
+      Object.entries(partial).filter(([, v]) => v !== undefined),
+    );
+    await updateDoc(doc(db, 'users', user.uid, 'races', id), clean);
   };
 
   const deleteRace = async (id: string) => {
