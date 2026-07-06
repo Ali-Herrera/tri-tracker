@@ -18,8 +18,142 @@ import {
   useUserWorkoutLibrary,
   type LibraryWorkout,
 } from '../hooks/useUserWorkoutLibrary';
+import { useUserRaces } from '../hooks/useUserRaces';
+import type { RaceEntry } from '../types';
 
 const SPORTS = ['Swim', 'Bike', 'Run', 'Lift', 'Other'] as const;
+
+const TODAY = new Date().toISOString().slice(0, 10);
+
+function groupByYear(races: RaceEntry[]): { year: string; races: RaceEntry[] }[] {
+  const map = new Map<string, RaceEntry[]>();
+  for (const race of races) {
+    const year = race.date.slice(0, 4);
+    if (!map.has(year)) map.set(year, []);
+    map.get(year)!.push(race);
+  }
+  return Array.from(map.entries()).map(([year, races]) => ({ year, races }));
+}
+
+function formatRaceDate(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function daysUntil(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const race = new Date(year, month - 1, day);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.round((race.getTime() - now.getTime()) / 86400000);
+}
+
+function FriendRaceRow({ race }: { race: RaceEntry }) {
+  const isMulti = race.raceType === 'Triathlon' || race.raceType === 'Duathlon';
+  const days = daysUntil(race.date);
+  const isPast = days < 0;
+
+  return (
+    <div className={`race-card${race.completed ? ' race-card--completed' : ''}`}>
+      <div className='race-card-header'>
+        <div className='race-card-meta'>
+          <span className={`race-type-badge race-type-badge--${race.raceType.toLowerCase()}`}>
+            {race.raceType}
+          </span>
+          <span className={`race-registered-chip${race.registered ? ' race-registered-chip--yes' : ''}`}>
+            {race.registered ? 'Registered' : 'Not Registered'}
+          </span>
+          {race.completed && <span className='race-completed-chip'>Finished</span>}
+        </div>
+        {race.link && (
+          <a className='race-link' href={race.link} target='_blank' rel='noopener noreferrer' title='Race details'>↗</a>
+        )}
+      </div>
+      <h3 className='race-card-name'>{race.name}</h3>
+      <div className='race-card-info'>
+        <span className='race-date'>{formatRaceDate(race.date)}</span>
+        {race.distance && <span className='race-distance'>{race.distance}</span>}
+        {!isPast && !race.completed && (
+          <span className='race-countdown'>
+            {days === 0 ? 'Today!' : `${days} day${days === 1 ? '' : 's'} away`}
+          </span>
+        )}
+      </div>
+      {race.completed && (race.finishTime || race.resultNotes) && (
+        <div className='race-results'>
+          {race.finishTime && (
+            <div className='race-results-times'>
+              <span className='race-result-item'>
+                <span className='race-result-label'>Finish</span>
+                <span className='race-result-value'>{race.finishTime}</span>
+              </span>
+              {isMulti && race.swimTime && (
+                <span className='race-result-item'>
+                  <span className='race-result-label'>Swim</span>
+                  <span className='race-result-value'>{race.swimTime}</span>
+                </span>
+              )}
+              {isMulti && race.bikeTime && (
+                <span className='race-result-item'>
+                  <span className='race-result-label'>Bike</span>
+                  <span className='race-result-value'>{race.bikeTime}</span>
+                </span>
+              )}
+              {isMulti && race.runTime && (
+                <span className='race-result-item'>
+                  <span className='race-result-label'>Run</span>
+                  <span className='race-result-value'>{race.runTime}</span>
+                </span>
+              )}
+            </div>
+          )}
+          {race.resultNotes && <p className='race-result-notes'>{race.resultNotes}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FriendRacesPanel({ friendUid }: { friendUid: string }) {
+  const { races, loading } = useUserRaces(friendUid);
+
+  if (loading) return <p className='muted'>Loading races...</p>;
+  if (races.length === 0) return <p className='muted'>No races added yet.</p>;
+
+  const upcoming = races.filter((r) => !r.completed && r.date >= TODAY);
+  const past = races.filter((r) => r.completed || r.date < TODAY);
+
+  return (
+    <div className='friend-library'>
+      {upcoming.length > 0 && (
+        <div>
+          <p className='races-section-title'>Upcoming</p>
+          {groupByYear(upcoming).map(({ year, races: group }) => (
+            <div key={year}>
+              <div className='races-year-label'>{year}</div>
+              {group.map((r) => <FriendRaceRow key={r.id} race={r} />)}
+            </div>
+          ))}
+        </div>
+      )}
+      {past.length > 0 && (
+        <div style={{ marginTop: upcoming.length > 0 ? '1rem' : 0 }}>
+          <p className='races-section-title'>Past Races</p>
+          {groupByYear(past).map(({ year, races: group }) => (
+            <div key={year}>
+              <div className='races-year-label'>{year}</div>
+              {group.map((r) => <FriendRaceRow key={r.id} race={r} />)}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function FriendLibraryPanel({ friendUid }: { friendUid: string }) {
   const { user } = useAuth();
@@ -185,6 +319,7 @@ export default function Friends() {
   const [requestError, setRequestError] = useState('');
   const [requestSuccess, setRequestSuccess] = useState('');
   const [expandedLibraryId, setExpandedLibraryId] = useState<string | null>(null);
+  const [expandedRacesId, setExpandedRacesId] = useState<string | null>(null);
 
   const profileIds = useMemo(() => {
     return [
@@ -277,6 +412,7 @@ export default function Friends() {
           const name =
             friendProfile?.displayName || friendProfile?.email || friend.uid;
           const isExpanded = expandedLibraryId === friend.uid;
+          const isRacesExpanded = expandedRacesId === friend.uid;
           return (
             <div key={friend.uid} className='friend-card'>
               <div className='friend-card-top'>
@@ -300,6 +436,14 @@ export default function Friends() {
                     View Profile
                   </Link>
                   <button
+                    className={`filter-btn${isRacesExpanded ? ' active' : ''}`}
+                    onClick={() =>
+                      setExpandedRacesId(isRacesExpanded ? null : friend.uid)
+                    }
+                  >
+                    {isRacesExpanded ? 'Hide Races' : 'View Races'}
+                  </button>
+                  <button
                     className={`filter-btn${isExpanded ? ' active' : ''}`}
                     onClick={() =>
                       setExpandedLibraryId(isExpanded ? null : friend.uid)
@@ -315,6 +459,9 @@ export default function Friends() {
                   </button>
                 </div>
               </div>
+              {isRacesExpanded && (
+                <FriendRacesPanel friendUid={friend.uid} />
+              )}
               {isExpanded && (
                 <FriendLibraryPanel friendUid={friend.uid} />
               )}

@@ -14,112 +14,15 @@ import { useFriends } from '../hooks/useFriends';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { useUserPlannedWorkouts } from '../hooks/useUserPlannedWorkouts';
 import { useUserWorkouts } from '../hooks/useUserWorkouts';
-import { useUserRaces } from '../hooks/useUserRaces';
 import ActivityLog from '../components/ActivityLog';
 import CalendarGrid from '../components/CalendarGrid';
 import LifetimeTotals from '../components/LifetimeTotals';
 import WeeklyVolumeChart from '../components/WeeklyVolumeChart';
 import WorkoutDetailsModal from '../components/WorkoutDetailsModal';
 import PlannedWorkoutDetailsModal from '../components/PlannedWorkoutDetailsModal';
-import type { PlannedWorkout, Workout, RaceEntry } from '../types';
+import type { PlannedWorkout, Workout } from '../types';
 
 const noop = () => {};
-
-const TODAY = new Date().toISOString().slice(0, 10);
-
-function formatRaceDate(dateStr: string) {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function daysUntilRace(dateStr: string) {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const race = new Date(year, month - 1, day);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return Math.round((race.getTime() - now.getTime()) / 86400000);
-}
-
-function FriendRaceCard({ race }: { race: RaceEntry }) {
-  const isMultiDiscipline = race.raceType === 'Triathlon' || race.raceType === 'Duathlon';
-  const days = daysUntilRace(race.date);
-  const isPast = days < 0;
-
-  return (
-    <div className={`race-card${race.completed ? ' race-card--completed' : ''}`}>
-      <div className='race-card-header'>
-        <div className='race-card-meta'>
-          <span className={`race-type-badge race-type-badge--${race.raceType.toLowerCase()}`}>
-            {race.raceType}
-          </span>
-          <span className={`race-registered-chip${race.registered ? ' race-registered-chip--yes' : ''}`}>
-            {race.registered ? 'Registered' : 'Not Registered'}
-          </span>
-          {race.completed && <span className='race-completed-chip'>Finished</span>}
-        </div>
-        {race.link && (
-          <a
-            className='race-link'
-            href={race.link}
-            target='_blank'
-            rel='noopener noreferrer'
-            title='Race details'
-          >
-            ↗
-          </a>
-        )}
-      </div>
-
-      <h3 className='race-card-name'>{race.name}</h3>
-
-      <div className='race-card-info'>
-        <span className='race-date'>{formatRaceDate(race.date)}</span>
-        {race.distance && <span className='race-distance'>{race.distance}</span>}
-        {!isPast && !race.completed && (
-          <span className='race-countdown'>
-            {days === 0 ? 'Today!' : `${days} day${days === 1 ? '' : 's'} away`}
-          </span>
-        )}
-      </div>
-
-      {race.completed && (race.finishTime || race.resultNotes) && (
-        <div className='race-results'>
-          {race.finishTime && (
-            <div className='race-results-times'>
-              <span className='race-result-item'>
-                <span className='race-result-label'>Finish</span>
-                <span className='race-result-value'>{race.finishTime}</span>
-              </span>
-              {isMultiDiscipline && race.swimTime && (
-                <span className='race-result-item'>
-                  <span className='race-result-label'>Swim</span>
-                  <span className='race-result-value'>{race.swimTime}</span>
-                </span>
-              )}
-              {isMultiDiscipline && race.bikeTime && (
-                <span className='race-result-item'>
-                  <span className='race-result-label'>Bike</span>
-                  <span className='race-result-value'>{race.bikeTime}</span>
-                </span>
-              )}
-              {isMultiDiscipline && race.runTime && (
-                <span className='race-result-item'>
-                  <span className='race-result-label'>Run</span>
-                  <span className='race-result-value'>{race.runTime}</span>
-                </span>
-              )}
-            </div>
-          )}
-          {race.resultNotes && <p className='race-result-notes'>{race.resultNotes}</p>}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function FriendProfile() {
   const { uid } = useParams();
@@ -155,7 +58,6 @@ export default function FriendProfile() {
   const { workouts: plannedWorkouts, loading: plannedLoading } =
     useUserPlannedWorkouts(permittedUid, queryStart, queryEnd);
   const { workouts, loading: workoutsLoading } = useUserWorkouts(permittedUid);
-  const { races, loading: racesLoading } = useUserRaces(permittedUid);
 
   const recentWorkouts = useMemo(() => {
     const now = new Date();
@@ -218,31 +120,6 @@ export default function FriendProfile() {
           <p>{profile.goals}</p>
         </section>
       )}
-
-      {!racesLoading && (() => {
-        const upcoming = races.filter((r) => !r.completed && r.date >= TODAY);
-        const past = races.filter((r) => r.completed || r.date < TODAY).slice().reverse();
-        return (
-          <section className='friend-profile-card'>
-            <h2>Races</h2>
-            {races.length === 0 && (
-              <p className='muted'>No races added yet.</p>
-            )}
-            {upcoming.length > 0 && (
-              <>
-                <p className='races-section-title'>Upcoming</p>
-                {upcoming.map((r) => <FriendRaceCard key={r.id} race={r} />)}
-              </>
-            )}
-            {past.length > 0 && (
-              <>
-                <p className='races-section-title' style={{ marginTop: upcoming.length > 0 ? '1rem' : 0 }}>Past Races</p>
-                {past.map((r) => <FriendRaceCard key={r.id} race={r} />)}
-              </>
-            )}
-          </section>
-        );
-      })()}
 
       {!workoutsLoading && (
         <LifetimeTotals workouts={workouts} timeFrame='All Time' />

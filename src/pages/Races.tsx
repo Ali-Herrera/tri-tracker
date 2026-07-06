@@ -13,6 +13,16 @@ const RACE_TYPES: RaceType[] = [
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
+function groupByYear(races: RaceEntry[]): { year: string; races: RaceEntry[] }[] {
+  const map = new Map<string, RaceEntry[]>();
+  for (const race of races) {
+    const year = race.date.slice(0, 4);
+    if (!map.has(year)) map.set(year, []);
+    map.get(year)!.push(race);
+  }
+  return Array.from(map.entries()).map(([year, races]) => ({ year, races }));
+}
+
 function formatDate(dateStr: string) {
   const [year, month, day] = dateStr.split('-').map(Number);
   return new Date(year, month - 1, day).toLocaleDateString('en-US', {
@@ -272,10 +282,7 @@ export default function Races() {
   };
 
   const upcoming = races.filter((r) => !r.completed && r.date >= TODAY);
-  const past = races
-    .filter((r) => r.completed || r.date < TODAY)
-    .slice()
-    .reverse();
+  const past = races.filter((r) => r.completed || r.date < TODAY);
 
   if (loading) return <p>Loading races...</p>;
 
@@ -363,13 +370,18 @@ export default function Races() {
       {upcoming.length > 0 && (
         <section className="races-list">
           <h2 className="races-section-title">Upcoming</h2>
-          {upcoming.map((race) => (
-            <RaceCard
-              key={race.id}
-              race={race}
-              onDelete={deleteRace}
-              onSaveResults={updateRace}
-            />
+          {groupByYear(upcoming).map(({ year, races: group }) => (
+            <div key={year}>
+              <div className="races-year-label">{year}</div>
+              {group.map((race) => (
+                <RaceCard
+                  key={race.id}
+                  race={race}
+                  onDelete={deleteRace}
+                  onSaveResults={updateRace}
+                />
+              ))}
+            </div>
           ))}
         </section>
       )}
@@ -377,13 +389,18 @@ export default function Races() {
       {past.length > 0 && (
         <section className="races-list">
           <h2 className="races-section-title">Past Races</h2>
-          {past.map((race) => (
-            <RaceCard
-              key={race.id}
-              race={race}
-              onDelete={deleteRace}
-              onSaveResults={updateRace}
-            />
+          {groupByYear(past).map(({ year, races: group }) => (
+            <div key={year}>
+              <div className="races-year-label">{year}</div>
+              {group.map((race) => (
+                <RaceCard
+                  key={race.id}
+                  race={race}
+                  onDelete={deleteRace}
+                  onSaveResults={updateRace}
+                />
+              ))}
+            </div>
           ))}
         </section>
       )}
