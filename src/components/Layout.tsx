@@ -28,6 +28,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           <NavLink to='/calendar' onClick={() => setSidebarOpen(false)}>
             Calendar
           </NavLink>
+          <NavLink to='/races' onClick={() => setSidebarOpen(false)}>
+            Races
+          </NavLink>
           <NavLink to='/friends' onClick={() => setSidebarOpen(false)}>
             Friends
           </NavLink>

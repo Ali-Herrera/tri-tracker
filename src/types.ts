@@ -49,6 +49,24 @@ export interface Race {
   date: Date;
 }
 
+export type RaceType = 'Triathlon' | 'Duathlon' | 'Running' | 'Cycling' | 'Swimming' | 'Other';
+
+export interface RaceEntry {
+  id: string;
+  name: string;
+  date: string; // YYYY-MM-DD
+  raceType: RaceType;
+  distance: string;
+  registered: boolean;
+  link?: string;
+  completed?: boolean;
+  finishTime?: string;
+  swimTime?: string;
+  bikeTime?: string;
+  runTime?: string;
+  resultNotes?: string;
+}
+
 export type TimeFrame =
   | 'All Time'
   | 'Year to Date'

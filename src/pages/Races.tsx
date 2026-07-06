@@ -1,0 +1,396 @@
+import { FormEvent, useState } from 'react';
+import { useRaces } from '../hooks/useRaces';
+import type { RaceEntry, RaceType } from '../types';
+
+const RACE_TYPES: RaceType[] = [
+  'Triathlon',
+  'Duathlon',
+  'Running',
+  'Cycling',
+  'Swimming',
+  'Other',
+];
+
+const TODAY = new Date().toISOString().slice(0, 10);
+
+function formatDate(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function daysUntil(dateStr: string) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const race = new Date(year, month - 1, day);
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const diff = Math.round((race.getTime() - now.getTime()) / 86400000);
+  return diff;
+}
+
+interface ResultsFormState {
+  finishTime: string;
+  swimTime: string;
+  bikeTime: string;
+  runTime: string;
+  resultNotes: string;
+}
+
+function RaceCard({
+  race,
+  onDelete,
+  onSaveResults,
+}: {
+  race: RaceEntry;
+  onDelete: (id: string) => void;
+  onSaveResults: (id: string, results: Partial<RaceEntry>) => Promise<void>;
+}) {
+  const [showResultsForm, setShowResultsForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<ResultsFormState>({
+    finishTime: race.finishTime || '',
+    swimTime: race.swimTime || '',
+    bikeTime: race.bikeTime || '',
+    runTime: race.runTime || '',
+    resultNotes: race.resultNotes || '',
+  });
+
+  const isMultiDiscipline = race.raceType === 'Triathlon' || race.raceType === 'Duathlon';
+  const days = daysUntil(race.date);
+  const isPast = days < 0;
+
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await onSaveResults(race.id, {
+        completed: true,
+        finishTime: form.finishTime || undefined,
+        swimTime: form.swimTime || undefined,
+        bikeTime: form.bikeTime || undefined,
+        runTime: form.runTime || undefined,
+        resultNotes: form.resultNotes || undefined,
+      });
+      setShowResultsForm(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className={`race-card${race.completed ? ' race-card--completed' : ''}`}>
+      <div className="race-card-header">
+        <div className="race-card-meta">
+          <span className={`race-type-badge race-type-badge--${race.raceType.toLowerCase()}`}>
+            {race.raceType}
+          </span>
+          <span className={`race-registered-chip${race.registered ? ' race-registered-chip--yes' : ''}`}>
+            {race.registered ? 'Registered' : 'Not Registered'}
+          </span>
+          {race.completed && <span className="race-completed-chip">Finished</span>}
+        </div>
+        <div className="race-card-actions">
+          {race.link && (
+            <a
+              className="race-link"
+              href={race.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Race details"
+            >
+              ↗
+            </a>
+          )}
+          <button
+            className="btn-icon race-delete"
+            onClick={() => onDelete(race.id)}
+            title="Delete race"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <h3 className="race-card-name">{race.name}</h3>
+
+      <div className="race-card-info">
+        <span className="race-date">{formatDate(race.date)}</span>
+        {race.distance && <span className="race-distance">{race.distance}</span>}
+        {!isPast && !race.completed && (
+          <span className="race-countdown">
+            {days === 0 ? 'Today!' : `${days} day${days === 1 ? '' : 's'} away`}
+          </span>
+        )}
+      </div>
+
+      {race.completed && (race.finishTime || race.resultNotes) && (
+        <div className="race-results">
+          {race.finishTime && (
+            <div className="race-results-times">
+              <span className="race-result-item">
+                <span className="race-result-label">Finish</span>
+                <span className="race-result-value">{race.finishTime}</span>
+              </span>
+              {isMultiDiscipline && race.swimTime && (
+                <span className="race-result-item">
+                  <span className="race-result-label">Swim</span>
+                  <span className="race-result-value">{race.swimTime}</span>
+                </span>
+              )}
+              {isMultiDiscipline && race.bikeTime && (
+                <span className="race-result-item">
+                  <span className="race-result-label">Bike</span>
+                  <span className="race-result-value">{race.bikeTime}</span>
+                </span>
+              )}
+              {isMultiDiscipline && race.runTime && (
+                <span className="race-result-item">
+                  <span className="race-result-label">Run</span>
+                  <span className="race-result-value">{race.runTime}</span>
+                </span>
+              )}
+            </div>
+          )}
+          {race.resultNotes && <p className="race-result-notes">{race.resultNotes}</p>}
+          <button
+            className="btn-secondary btn-sm"
+            onClick={() => setShowResultsForm(true)}
+          >
+            Edit Results
+          </button>
+        </div>
+      )}
+
+      {!race.completed && isPast && !showResultsForm && (
+        <button
+          className="btn-secondary btn-sm race-complete-btn"
+          onClick={() => setShowResultsForm(true)}
+        >
+          Mark Complete
+        </button>
+      )}
+
+      {showResultsForm && (
+        <form className="race-results-form" onSubmit={handleSave}>
+          <label>
+            Overall Finish Time
+            <input
+              type="text"
+              placeholder="4:32:15"
+              value={form.finishTime}
+              onChange={(e) => setForm((f) => ({ ...f, finishTime: e.target.value }))}
+            />
+          </label>
+          {isMultiDiscipline && (
+            <>
+              <label>
+                Swim Split
+                <input
+                  type="text"
+                  placeholder="32:45"
+                  value={form.swimTime}
+                  onChange={(e) => setForm((f) => ({ ...f, swimTime: e.target.value }))}
+                />
+              </label>
+              <label>
+                Bike Split
+                <input
+                  type="text"
+                  placeholder="2:45:00"
+                  value={form.bikeTime}
+                  onChange={(e) => setForm((f) => ({ ...f, bikeTime: e.target.value }))}
+                />
+              </label>
+              <label>
+                Run Split
+                <input
+                  type="text"
+                  placeholder="1:58:30"
+                  value={form.runTime}
+                  onChange={(e) => setForm((f) => ({ ...f, runTime: e.target.value }))}
+                />
+              </label>
+            </>
+          )}
+          <label>
+            Notes
+            <textarea
+              placeholder="Pacing, placement, conditions..."
+              value={form.resultNotes}
+              onChange={(e) => setForm((f) => ({ ...f, resultNotes: e.target.value }))}
+              rows={3}
+            />
+          </label>
+          <div className="race-results-form-actions">
+            <button type="submit" className="btn-primary btn-sm" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Results'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary btn-sm"
+              onClick={() => setShowResultsForm(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+export default function Races() {
+  const { races, loading, addRace, updateRace, deleteRace } = useRaces();
+  const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [name, setName] = useState('');
+  const [date, setDate] = useState('');
+  const [raceType, setRaceType] = useState<RaceType>('Triathlon');
+  const [distance, setDistance] = useState('');
+  const [registered, setRegistered] = useState(false);
+  const [link, setLink] = useState('');
+
+  const handleAdd = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await addRace({ name, date, raceType, distance, registered, link });
+      setName('');
+      setDate('');
+      setRaceType('Triathlon');
+      setDistance('');
+      setRegistered(false);
+      setLink('');
+      setShowForm(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const upcoming = races.filter((r) => !r.completed && r.date >= TODAY);
+  const past = races
+    .filter((r) => r.completed || r.date < TODAY)
+    .slice()
+    .reverse();
+
+  if (loading) return <p>Loading races...</p>;
+
+  return (
+    <div className="races-page">
+      <div className="page-header">
+        <h1>My Races</h1>
+        <button
+          className="btn-primary"
+          onClick={() => setShowForm((s) => !s)}
+        >
+          {showForm ? 'Cancel' : '+ Add Race'}
+        </button>
+      </div>
+
+      {showForm && (
+        <form className="races-form" onSubmit={handleAdd}>
+          <h3>New Race</h3>
+          <div className="races-form-grid">
+            <label>
+              Race Name
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ironman Lake Placid"
+                required
+              />
+            </label>
+            <label>
+              Date
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Race Type
+              <select
+                value={raceType}
+                onChange={(e) => setRaceType(e.target.value as RaceType)}
+              >
+                {RACE_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Distance
+              <input
+                type="text"
+                value={distance}
+                onChange={(e) => setDistance(e.target.value)}
+                placeholder="Sprint / Olympic / 70.3 / Marathon..."
+              />
+            </label>
+            <label>
+              Race Link
+              <input
+                type="url"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://..."
+              />
+            </label>
+            <label className="races-form-checkbox">
+              <input
+                type="checkbox"
+                checked={registered}
+                onChange={(e) => setRegistered(e.target.checked)}
+              />
+              Registered
+            </label>
+          </div>
+          <button type="submit" className="btn-primary" disabled={submitting}>
+            {submitting ? 'Adding...' : 'Add Race'}
+          </button>
+        </form>
+      )}
+
+      {upcoming.length > 0 && (
+        <section className="races-list">
+          <h2 className="races-section-title">Upcoming</h2>
+          {upcoming.map((race) => (
+            <RaceCard
+              key={race.id}
+              race={race}
+              onDelete={deleteRace}
+              onSaveResults={updateRace}
+            />
+          ))}
+        </section>
+      )}
+
+      {past.length > 0 && (
+        <section className="races-list">
+          <h2 className="races-section-title">Past Races</h2>
+          {past.map((race) => (
+            <RaceCard
+              key={race.id}
+              race={race}
+              onDelete={deleteRace}
+              onSaveResults={updateRace}
+            />
+          ))}
+        </section>
+      )}
+
+      {races.length === 0 && (
+        <p className="muted races-empty">No races added yet. Hit "Add Race" to get started.</p>
+      )}
+    </div>
+  );
+}

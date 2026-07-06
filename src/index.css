@@ -371,13 +371,49 @@ body {
 }
 
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.25rem;
   background: var(--accent);
   color: #fff;
   border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
 }
 
 .btn-primary:hover {
   background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.25rem;
+  background: var(--bg-input);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card);
+  border-color: var(--text-muted);
 }
 
 .btn-danger {
@@ -1440,5 +1476,295 @@ section {
 
   .cal-header {
     font-size: 0.75rem;
+  }
+}
+
+/* ── Races Page ─────────────────────────────────────────── */
+
+.races-page {
+  max-width: 800px;
+}
+
+.races-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.races-form h3 {
+  margin: 0 0 1rem;
+  color: var(--text);
+}
+
+.races-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.races-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.races-form-checkbox {
+  display: flex;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.races-form-checkbox input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+
+.races-section-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.races-list {
+  margin-bottom: 2rem;
+}
+
+.races-empty {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.race-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.race-card--completed {
+  border-color: rgba(0, 204, 150, 0.4);
+  opacity: 0.9;
+}
+
+.race-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.race-card-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.race-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.race-card-name {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.race-card-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.race-countdown {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.race-distance {
+  color: var(--text);
+}
+
+/* Type badges */
+.race-type-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: var(--bg-input);
+  color: var(--text-muted);
+}
+
+.race-type-badge--triathlon { background: #1e2a4a; color: var(--accent); }
+.race-type-badge--duathlon  { background: #2a1e4a; color: #a78bfa; }
+.race-type-badge--running   { background: #1a2e1a; color: var(--green); }
+.race-type-badge--cycling   { background: #2e2a1a; color: var(--yellow); }
+.race-type-badge--swimming  { background: #1a2a2e; color: #67e8f9; }
+.race-type-badge--other     { background: var(--bg-input); color: var(--text-muted); }
+
+/* Registration chip */
+.race-registered-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(240, 173, 78, 0.15);
+  color: var(--yellow);
+}
+
+.race-registered-chip--yes {
+  background: rgba(0, 204, 150, 0.15);
+  color: var(--green);
+}
+
+.race-completed-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(0, 204, 150, 0.15);
+  color: var(--green);
+}
+
+/* External link */
+.race-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.race-link:hover { background: var(--bg-input); }
+
+/* Delete button */
+.race-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.race-delete:hover {
+  color: var(--red);
+  background: rgba(239, 85, 59, 0.1);
+}
+
+/* Results */
+.race-results {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.race-results-times {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.race-result-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.race-result-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.race-result-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+
+.race-result-notes {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.race-complete-btn {
+  margin-top: 0.75rem;
+}
+
+/* Inline results form */
+.race-results-form {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.race-results-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.race-results-form label input,
+.race-results-form label textarea {
+  margin-top: 0.1rem;
+}
+
+.race-results-form label:last-of-type {
+  grid-column: 1 / -1;
+}
+
+.race-results-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+
+@media (max-width: 600px) {
+  .races-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .race-results-form {
+    grid-template-columns: 1fr;
   }
 }

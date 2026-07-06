@@ -8,6 +8,7 @@ import Friends from './pages/Friends';
 import FriendProfile from './pages/FriendProfile';
 import ImportWorkouts from './pages/ImportWorkouts';
 import References from './pages/References';
+import Races from './pages/Races';
 
 export default function App() {
   const auth = useAuthProvider();
@@ -35,6 +36,7 @@ export default function App() {
             <Route path='/friends/:uid' element={<FriendProfile />} />
             <Route path='/import' element={<ImportWorkouts />} />
             <Route path='/references' element={<References />} />
+            <Route path='/races' element={<Races />} />
           </Routes>
         </Layout>
       </BrowserRouter>
