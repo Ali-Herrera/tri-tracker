@@ -219,12 +219,15 @@ export default function FriendProfile() {
         </section>
       )}
 
-      {!racesLoading && races.length > 0 && (() => {
+      {!racesLoading && (() => {
         const upcoming = races.filter((r) => !r.completed && r.date >= TODAY);
         const past = races.filter((r) => r.completed || r.date < TODAY).slice().reverse();
         return (
           <section className='friend-profile-card'>
             <h2>Races</h2>
+            {races.length === 0 && (
+              <p className='muted'>No races added yet.</p>
+            )}
             {upcoming.length > 0 && (
               <>
                 <p className='races-section-title'>Upcoming</p>
